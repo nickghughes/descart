@@ -1,3 +1,5 @@
+import 'package:descart/discover.dart';
+import 'package:descart/history.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -73,16 +75,8 @@ class _MainPageState extends State<MainPage> {
       // ),
       body: PageView(
         children: [
-          Container(
-            child: Center(
-              child: Text("Discover Page: Implement me"),
-            ),
-          ),
-          Container(
-            child: Center(
-              child: Text("Purchase Page: Implement me")
-            ),
-          ),
+          Discover(),
+          PurchaseHistory(),
         ],
         controller: _pageController,
         onPageChanged: _onPageChanged,
