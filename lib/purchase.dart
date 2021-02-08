@@ -18,9 +18,9 @@ class _PurchasePreviewState extends State<PurchasePreview> {
     String subtotal = items
         .map((el) => double.parse(el["price"]) * el["quantity"])
         .reduce((curr, next) => curr + next)
-        .toString();
-    String lambda =
-        (double.parse(_purchase["price"]) - double.parse(subtotal)).toString();
+        .toStringAsFixed(2);
+    String lambda = (double.parse(_purchase["price"]) - double.parse(subtotal))
+        .toStringAsFixed(2);
 
     return Material(
       type: MaterialType.transparency,
@@ -157,6 +157,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                 ),
                               ),
                             ),
+                            SizedBox(height: 30),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
