@@ -1,4 +1,5 @@
 import 'package:descart/network.dart';
+import 'package:descart/purchase.dart';
 import 'package:flutter/material.dart';
 
 class PurchaseHistory extends StatefulWidget {
@@ -112,75 +113,87 @@ class PurchaseHistoryBlock extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(20))
       ),
-      child: Container(
-        padding: EdgeInsets.all(15),
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  Container(
-                    width: 70,
-                    child: Center(child: Image.network(imageUrl)),
-                  ),
-                  Container(
-                    padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(
-                        storeName,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: () => openPurchasePreview(context),
+        child: Container(
+          padding: EdgeInsets.all(15),
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 70,
+                      child: Center(child: Image.network(imageUrl)),
+                    ),
+                    Container(
+                      padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          storeName,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Text(
-                "\$$price",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+                  ],
                 ),
               ),
-            ),
-            Align(
-              alignment: Alignment.topRight,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    date,
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Text(
+                  "\$$price",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                ),
               ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "$items $itemsText",
-                    style: TextStyle(
-                      fontSize: 16,
+              Align(
+                alignment: Alignment.topRight,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      date,
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "$items $itemsText",
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  void openPurchasePreview(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return PurchasePreview();
+      }
     );
   }
 }
