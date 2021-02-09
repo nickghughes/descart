@@ -26,7 +26,7 @@ class _NavScaffoldState extends State<NavScaffold> {
   void _onPageChanged(int page) {
     setState(() {
       _page = page;
-    }); 
+    });
   }
 
   @override
@@ -63,7 +63,7 @@ class _NavScaffoldState extends State<NavScaffold> {
         controller: _pageController,
         onPageChanged: _onPageChanged,
       ),
-      floatingActionButton: FloatingActionButton( 
+      floatingActionButton: FloatingActionButton(
         onPressed: _createPurchase,
         tooltip: 'New Purchase',
         child: Icon(Icons.add_shopping_cart),
