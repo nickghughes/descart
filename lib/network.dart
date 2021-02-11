@@ -187,6 +187,20 @@ Map<String, dynamic> getProductPreview() {
         "imageUrl":
             "https://static-s.aa-cdn.net/img/ios/386960831/0ee8db7cd06c907f1476162860bf2b38",
         "websiteUrl": "https://www.bestbuy.com",
+        "price": "99.99",
+      },
+      {
+        "storeName": "Target",
+        "imageUrl":
+            "http://abullseyeview.s3.amazonaws.com/wp-content/uploads/2014/04/targetlogo-6.jpeg",
+        "websiteUrl": "https://www.target.com",
+        "price": "222.22",
+      },
+      {
+        "storeName": "Best Buy",
+        "imageUrl":
+            "https://static-s.aa-cdn.net/img/ios/386960831/0ee8db7cd06c907f1476162860bf2b38",
+        "websiteUrl": "https://www.bestbuy.com",
         "price": "199.99",
       },
     ],

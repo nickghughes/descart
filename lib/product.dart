@@ -1,5 +1,6 @@
 import 'package:descart/network.dart';
 import 'package:descart/util.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ProductPreview extends StatefulWidget {
@@ -20,7 +21,7 @@ class _ProductPreviewState extends State<ProductPreview> {
     stores.sort(
         (x, y) => double.parse(x["price"]).compareTo(double.parse(y["price"])));
 
-    double containerHeight = MediaQuery.of(context).size.height / 2;
+    double containerHeight = MediaQuery.of(context).size.height * 2 / 3;
 
     return Material(
       type: MaterialType.transparency,
@@ -49,10 +50,71 @@ class _ProductPreviewState extends State<ProductPreview> {
                         Column(
                           children: [
                             Bold.withSize(_product["productName"], 24),
-                            Bold.withSize(_product["manufacturerName"], 16)
+                            // Bold.withSize(_product["manufacturerName"], 16)
+                            Text(
+                              _product["manufacturerName"],
+                              style: TextStyle(
+                                  fontStyle: FontStyle.italic, fontSize: 16),
+                            )
                           ],
                         ),
                       ],
+                    ),
+                    SizedBox(height: 20),
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(flex: 1, child: Container()),
+                                Expanded(flex: 4, child: Bold("Store")),
+                                Expanded(flex: 2, child: Bold("Price")),
+                              ],
+                            ),
+                            SizedBox(height: 20),
+                            Expanded(
+                              flex: 1,
+                              child: ListView.separated(
+                                separatorBuilder: (context, index) =>
+                                    Divider(color: Colors.black),
+                                itemCount: _product["stores"].length,
+                                itemBuilder: (context, index) => InkWell(
+                                  onTap: () => debugPrint("click store: " +
+                                      _product["stores"][index]["storeName"]),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: Container(
+                                          padding:
+                                              EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                          child: Image.network(
+                                              _product["stores"][index]
+                                                  ["imageUrl"]),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 4,
+                                        child: Bold.withSize(
+                                            _product["stores"][index]
+                                                ["storeName"],
+                                            16),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text("\$ " +
+                                            _product["stores"][index]["price"]),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
