@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:descart/network.dart';
+import 'package:descart/product.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class Discover extends StatefulWidget {
   @override
@@ -103,71 +105,84 @@ class RecommendationBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 100,
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(20))),
-      child: Container(
-        padding: EdgeInsets.all(15),
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  Container(
-                    width: 70,
-                    child: Center(child: Image.network(imageUrl)),
-                  ),
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(15, 15, 0, 0),
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          productName,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+        height: 100,
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(20))),
+        child: InkWell(
+          onTap: () => openProductPreview(context),
+          child: Container(
+            padding: EdgeInsets.all(15),
+            child: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 70,
+                        child: Center(child: Image.network(imageUrl)),
+                      ),
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(15, 15, 0, 0),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              productName,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
+                      )
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        manufacturerName,
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.topRight,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    manufacturerName,
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "$numberOfStores $numberOfStoresText",
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
+                ),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "$numberOfStores $numberOfStoresText",
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        ));
+  }
+
+  void openProductPreview(BuildContext context) {
+    showCupertinoModalBottomSheet<void>(
+      context: context,
+      expand: false,
+      isDismissible: true,
+      builder: (context) => SingleChildScrollView(
+          controller: ModalScrollController.of(context),
+          child: ProductPreview()),
     );
   }
 }
