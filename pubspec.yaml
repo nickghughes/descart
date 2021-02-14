@@ -23,7 +23,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # The bottom modal comes from this package
   modal_bottom_sheet: ^1.0.0+1
+
+  # OAuth with Google-Sign-in (TODO)
+  # firebase_auth: ^0.20.0+1
+  # google_sign_in: ^4.5.9
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -46,7 +52,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
+  assets:
+    - assets/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
