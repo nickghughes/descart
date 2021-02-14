@@ -1,4 +1,4 @@
-import 'package:descart/nav_scaffold.dart';
+import 'package:descart/login_page.dart';
 import 'package:flutter/material.dart';
 
 class DesCart extends StatelessWidget {
@@ -10,7 +10,10 @@ class DesCart extends StatelessWidget {
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: NavScaffold(),
+      home: LoginPage(),
+      routes: {
+        "/logout": (_) => new LoginPage(),
+      },
     );
   }
 }
