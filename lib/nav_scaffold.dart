@@ -1,5 +1,6 @@
 import 'package:descart/discover.dart';
 import 'package:descart/history.dart';
+import 'package:descart/purchase_form.dart';
 import 'package:flutter/material.dart';
 
 class NavScaffold extends StatefulWidget {
@@ -12,7 +13,11 @@ class _NavScaffoldState extends State<NavScaffold> {
   int _page = 0;
 
   void _createPurchase() {
-    debugPrint("creating a purchase");
+    showDialog(
+        context: context,
+        builder: (context) {
+          return PurchaseStoreForm();
+        });
   }
 
   void _navigationTapped(int page) {
