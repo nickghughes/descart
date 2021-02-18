@@ -206,3 +206,60 @@ Map<String, dynamic> getProductPreview() {
     ],
   };
 }
+
+List<Map<String, dynamic>> getStoreSuggestions(String query) {
+  return [
+    {
+      "id": 1,
+      "name": "Target",
+      "imageUrl":
+          "http://abullseyeview.s3.amazonaws.com/wp-content/uploads/2014/04/targetlogo-6.jpeg",
+    },
+    {
+      "id": 2,
+      "name": "Amazon",
+      "imageUrl":
+          "http://abullseyeview.s3.amazonaws.com/wp-content/uploads/2014/04/targetlogo-6.jpeg",
+    },
+    {
+      "id": 3,
+      "name": "Walmart",
+      "imageUrl":
+          "http://abullseyeview.s3.amazonaws.com/wp-content/uploads/2014/04/targetlogo-6.jpeg",
+    },
+    {
+      "id": 4,
+      "name": "BH Photo Video",
+      "imageUrl":
+          "http://abullseyeview.s3.amazonaws.com/wp-content/uploads/2014/04/targetlogo-6.jpeg",
+    },
+  ];
+}
+
+List<Map<String, dynamic>> getProductSuggestions(String query) {
+  List<Map<String, dynamic>> result = [
+    {
+      "id": 1,
+      "name": "Gear Active2 Watch",
+      "manufacturerName": "Samsung",
+      "imageUrl":
+          "https://images-na.ssl-images-amazon.com/images/I/51wdZYpKEbL._AC_UL160_SR160,160_.jpg"
+    },
+    {
+      "id": 2,
+      "name": "ICU Health Non Medical Face Mask 20ct",
+      "manufacturerName": "ICU Eyewear",
+      "imageUrl":
+          "https://target.scene7.com/is/image/Target/GUEST_efdf88d2-daee-42d9-8f18-8977dbc94127?wid=325&hei=325&qlt=80&fmt=webp"
+    },
+    {
+      "id": 3,
+      "name": "Men's Straight Fit Jeans",
+      "manufacturerName": "Goodfellow & Co",
+      "imageUrl":
+          "https://target.scene7.com/is/image/Target/GUEST_49a48060-1ffa-4ba9-8c20-d0446a2577ec?wid=325&hei=325&qlt=80&fmt=webp"
+    },
+  ];
+  if (query.length > 0) result.add({"name": query});
+  return result;
+}

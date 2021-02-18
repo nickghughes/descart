@@ -208,9 +208,12 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                             ),
                             SizedBox(height: 100),
                             GestureDetector(
-                                onTap: () => debugPrint("delete purchase"),
-                                child: Text("Delete Purchase",
-                                    style: TextStyle(color: Colors.red)))
+                              onTap: () => debugPrint("delete purchase"),
+                              child: Text(
+                                "Delete Purchase",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
                           ],
                         ),
                       ),
