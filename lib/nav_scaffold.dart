@@ -1,5 +1,6 @@
 import 'package:descart/discover.dart';
 import 'package:descart/history.dart';
+import 'package:descart/settings.dart';
 import 'package:flutter/material.dart';
 
 class NavScaffold extends StatefulWidget {
@@ -59,6 +60,7 @@ class _NavScaffoldState extends State<NavScaffold> {
         children: [
           Discover(),
           PurchaseHistory(),
+          Settings(),
         ],
         controller: _pageController,
         onPageChanged: _onPageChanged,
@@ -77,6 +79,10 @@ class _NavScaffoldState extends State<NavScaffold> {
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Purchases',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
         onTap: _navigationTapped,

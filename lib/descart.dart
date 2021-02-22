@@ -11,9 +11,6 @@ class DesCart extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: LoginPage(),
-      routes: {
-        "/logout": (_) => new LoginPage(),
-      },
     );
   }
 }
