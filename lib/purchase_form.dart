@@ -8,11 +8,19 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 
 class PurchaseStoreForm extends StatefulWidget {
+  final Function() onSave;
+
+  PurchaseStoreForm(this.onSave);
+
   @override
-  _PurchaseStoreFormState createState() => _PurchaseStoreFormState();
+  _PurchaseStoreFormState createState() => _PurchaseStoreFormState(onSave);
 }
 
 class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
+  final Function() onSave;
+
+  _PurchaseStoreFormState(this.onSave);
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -32,16 +40,22 @@ class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
                 SizedBox(height: 20),
                 TypeAheadField(
                   textFieldConfiguration: TextFieldConfiguration(
-                      autofocus: true,
-                      decoration:
-                          InputDecoration(border: OutlineInputBorder())),
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
                   suggestionsCallback: (pattern) async {
-                    debugPrint(pattern);
-                    return getStoreSuggestions(pattern);
+                    List<dynamic> suggestions =
+                        await getStoreSuggestions(pattern);
+                    debugPrint(suggestions.toString());
+                    return suggestions;
                   },
                   itemBuilder: (context, suggestion) {
                     return ListTile(
-                      leading: Image.network(suggestion["imageUrl"]),
+                      leading: suggestion["imageUrl"] == null
+                          ? SizedBox()
+                          : Image.network(suggestion["imageUrl"]),
                       title: Text(suggestion['name']),
                     );
                   },
@@ -51,7 +65,7 @@ class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
                     showDialog(
                         context: context,
                         builder: (context) {
-                          return PurchaseForm(suggestion);
+                          return PurchaseForm(suggestion, onSave);
                         });
                   },
                 ),
@@ -99,17 +113,20 @@ class _PurchaseProductFormState extends State<PurchaseProductForm> {
                       decoration:
                           InputDecoration(border: OutlineInputBorder())),
                   suggestionsCallback: (pattern) async {
-                    return getProductSuggestions(pattern);
+                    return await getProductSuggestions(pattern);
                   },
                   itemBuilder: (context, suggestion) {
                     return ListTile(
-                      leading: suggestion.containsKey("imageUrl")
-                          ? Image.network(suggestion["imageUrl"])
-                          : null,
+                      leading: suggestion["imageUrl"] == null
+                          ? SizedBox()
+                          : Container(
+                              width: 50,
+                              child: Image.network(suggestion["imageUrl"]),
+                            ),
                       title: Text(suggestion['name']),
-                      subtitle: suggestion.containsKey("manufacturerName")
-                          ? Text(suggestion['manufacturerName'])
-                          : null,
+                      subtitle: suggestion["manufacturerName"] == null
+                          ? null
+                          : Text(suggestion['manufacturerName']),
                     );
                   },
                   onSuggestionSelected: (suggestion) {
@@ -149,13 +166,20 @@ class _ProductInfoFormState extends State<ProductInfoForm> {
       decimalSeparator: '.', thousandSeparator: '', leftSymbol: '\$');
   final quantityController = TextEditingController();
 
+  @override
+  void dispose() {
+    super.dispose();
+    priceController.dispose();
+    quantityController.dispose();
+  }
+
   void useCallback(BuildContext context) {
     int quantity = int.parse(quantityController.text);
     String price =
         priceController.text.substring(1, priceController.text.length);
-    suggestion["quantity"] = quantity;
-    suggestion["price"] = price;
-    callback(suggestion);
+    Map<String, dynamic> item = {"quantity": quantity, "price": price};
+    item.addAll(suggestion);
+    callback(item);
     Navigator.of(context).pop();
   }
 
@@ -228,41 +252,52 @@ class _ProductInfoFormState extends State<ProductInfoForm> {
 
 class PurchaseForm extends StatefulWidget {
   final Map<String, dynamic> store;
-  PurchaseForm(this.store);
+  final Function() onSave;
+  PurchaseForm(this.store, this.onSave);
 
   @override
-  _PurchaseFormState createState() => _PurchaseFormState(this.store);
+  _PurchaseFormState createState() => _PurchaseFormState(store, onSave);
 }
 
 class _PurchaseFormState extends State<PurchaseForm> {
   final Map<String, dynamic> store;
-  _PurchaseFormState(this.store) {
-    debugPrint("opening form for store $store");
-  }
+  final Function() onSave;
+  _PurchaseFormState(this.store, this.onSave);
   final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _scrollController.dispose();
+  }
 
   List<Map<String, dynamic>> items = [];
   final priceController = MoneyMaskedTextController(
       decimalSeparator: '.', thousandSeparator: '', leftSymbol: '\$');
 
-  void savePurchase(BuildContext context) {
+  void savePurchase(BuildContext context) async {
     Map<String, dynamic> purchase = {
+      "user_id": 1,
       "store_id": store['id'],
       "price": priceController.text.substring(1, priceController.text.length),
-      "products": items.map((item) => item.containsKey("id")
-          ? {
-              "id": item["id"],
-              "price": item["price"],
-              "quantity": item["quantity"]
-            }
-          : {
-              "name": item["name"],
-              "price": item["price"],
-              "quantity": item["quantity"]
-            })
+      "products": items
+          .map((item) => item.containsKey("id")
+              ? {
+                  "id": item["id"],
+                  "price": item["price"],
+                  "quantity": item["quantity"]
+                }
+              : {
+                  "name": item["name"],
+                  "price": item["price"],
+                  "quantity": item["quantity"]
+                })
+          .toList()
     };
     debugPrint("Saving purchase with the following structure: $purchase");
+    await postPurchase(purchase);
     Navigator.of(context).pop();
+    onSave();
   }
 
   @override
@@ -303,9 +338,9 @@ class _PurchaseFormState extends State<PurchaseForm> {
                       children: [
                         Container(
                           width: 100,
-                          child: store.containsKey("imageUrl")
-                              ? Image.network(store["imageUrl"])
-                              : SizedBox(),
+                          child: store["imageUrl"] == null
+                              ? SizedBox()
+                              : Image.network(store["imageUrl"]),
                         ),
                         Expanded(
                           child: Container(
@@ -374,15 +409,15 @@ class _PurchaseFormState extends State<PurchaseForm> {
                                             Expanded(
                                               flex: 1,
                                               child: Container(
-                                                  padding: EdgeInsets.fromLTRB(
-                                                      0, 0, 5, 0),
-                                                  child: items[index]
-                                                          .containsKey(
-                                                              "imageUrl")
-                                                      ? Image.network(
-                                                          items[index]
-                                                              ["imageUrl"])
-                                                      : SizedBox()),
+                                                padding: EdgeInsets.fromLTRB(
+                                                    0, 0, 5, 0),
+                                                child: items[index]
+                                                            ["imageUrl"] ==
+                                                        null
+                                                    ? SizedBox()
+                                                    : Image.network(items[index]
+                                                        ["imageUrl"]),
+                                              ),
                                             ),
                                             Expanded(
                                               flex: 3,
