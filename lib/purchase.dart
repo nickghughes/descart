@@ -1,25 +1,64 @@
 import 'package:descart/network.dart';
+import 'package:descart/product.dart';
 import 'package:descart/util.dart';
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class PurchasePreview extends StatefulWidget {
+  Map<String, dynamic> purchase;
+
+  PurchasePreview(this.purchase);
+
   @override
-  _PurchasePreviewState createState() => _PurchasePreviewState();
+  _PurchasePreviewState createState() => _PurchasePreviewState(purchase);
 }
 
 class _PurchasePreviewState extends State<PurchasePreview> {
-  Map<String, dynamic> _purchase = getPurchasePreview();
+  Map<String, dynamic> _purchase;
+  Future<List<dynamic>> _items;
+
+  _PurchasePreviewState(this._purchase);
+
+  @override
+  void initState() {
+    _items = getPurchaseItems(_purchase["purchaseId"]);
+    super.initState();
+  }
+
+  void openProductPreview(BuildContext context, dynamic product) {
+    showCupertinoModalBottomSheet<void>(
+      context: context,
+      expand: false,
+      isDismissible: true,
+      builder: (context) => SingleChildScrollView(
+          controller: ModalScrollController.of(context),
+          child: ProductPreview(product)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    int numItems = _purchase["numItems"];
+    return FutureBuilder(
+        future: _items,
+        builder: (context, data) {
+          if (data.hasData) {
+            _purchase["items"] = data.data;
+            return preview(context, _purchase);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        });
+  }
+
+  Widget preview(BuildContext context, Map<String, dynamic> purchase) {
+    int numItems = purchase["numItems"];
     String numItemsText = numItems == 1 ? "1 item" : "$numItems items";
-    List<Map<String, dynamic>> items = _purchase["items"];
+    List<dynamic> items = purchase["items"];
     String subtotal = items
         .map((el) => double.parse(el["price"]) * el["quantity"])
         .reduce((curr, next) => curr + next)
         .toStringAsFixed(2);
-    String lambda = (double.parse(_purchase["price"]) - double.parse(subtotal))
+    String lambda = (double.parse(purchase["price"]) - double.parse(subtotal))
         .toStringAsFixed(2);
 
     return Material(
@@ -47,7 +86,9 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                       children: [
                         Container(
                           width: 100,
-                          child: Image.network(_purchase["imageUrl"]),
+                          child: purchase["imageUrl"] == null
+                              ? Icon(Icons.shopping_bag)
+                              : Image.network(purchase["imageUrl"]),
                         ),
                         Expanded(
                           child: Container(
@@ -58,14 +99,14 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _purchase["storeName"],
+                                    purchase["storeName"],
                                     style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    _purchase["purchaseDate"],
+                                    purchase["purchaseDate"],
                                     style: TextStyle(
                                       fontSize: 18,
                                     ),
@@ -110,17 +151,18 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                               child: ListView.separated(
                                 separatorBuilder: (context, index) =>
                                     Divider(color: Colors.black),
-                                itemCount: _purchase["items"].length,
+                                itemCount: purchase["items"].length,
                                 itemBuilder: (context, index) => InkWell(
-                                  onTap: () => debugPrint(
-                                      "clicked purchase item: " +
-                                          _purchase["items"][index]
-                                              ["productName"]),
+                                  onTap: () => purchase["items"][index]
+                                          .containsKey("productId")
+                                      ? openProductPreview(
+                                          context, purchase["items"][index])
+                                      : debugPrint("cannot open custom item"),
                                   child: Row(
                                     children: [
                                       Expanded(
                                         flex: 1,
-                                        child: Text(_purchase["items"][index]
+                                        child: Text(purchase["items"][index]
                                                 ["quantity"]
                                             .toString()),
                                       ),
@@ -129,26 +171,30 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                         child: Container(
                                             padding:
                                                 EdgeInsets.fromLTRB(0, 0, 5, 0),
-                                            child: Image.network(
-                                                _purchase["items"][index]
-                                                    ["imageUrl"])),
+                                            child: purchase["items"][index]
+                                                        ["imageUrl"] ==
+                                                    null
+                                                ? SizedBox()
+                                                : Image.network(
+                                                    purchase["items"][index]
+                                                        ["imageUrl"])),
                                       ),
                                       Expanded(
                                         flex: 4,
-                                        child: Text(_purchase["items"][index]
+                                        child: Text(purchase["items"][index]
                                             ["productName"]),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                            _purchase["items"][index]["price"]),
+                                            purchase["items"][index]["price"]),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text((double.parse(
-                                                    _purchase["items"][index]
+                                                    purchase["items"][index]
                                                         ["price"]) *
-                                                _purchase["items"][index]
+                                                purchase["items"][index]
                                                     ["quantity"])
                                             .toString()),
                                       ),
@@ -202,7 +248,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                 ),
                                 Expanded(
                                   flex: 2,
-                                  child: Text(_purchase["price"]),
+                                  child: Text(purchase["price"]),
                                 ),
                               ],
                             ),

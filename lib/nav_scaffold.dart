@@ -16,7 +16,7 @@ class _NavScaffoldState extends State<NavScaffold> {
     showDialog(
         context: context,
         builder: (context) {
-          return PurchaseStoreForm();
+          return PurchaseStoreForm(() => setState(() {}));
         });
   }
 
@@ -62,7 +62,7 @@ class _NavScaffoldState extends State<NavScaffold> {
       // ),
       body: PageView(
         children: [
-          Discover(),
+          Discover(1),
           PurchaseHistory(),
         ],
         controller: _pageController,
