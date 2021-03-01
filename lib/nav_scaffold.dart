@@ -1,5 +1,6 @@
 import 'package:descart/discover.dart';
 import 'package:descart/history.dart';
+import 'package:descart/purchase_form.dart';
 import 'package:flutter/material.dart';
 import 'package:descart/sign_in.dart';
 import 'package:descart/login_page.dart';
@@ -14,7 +15,11 @@ class _NavScaffoldState extends State<NavScaffold> {
   int _page = 0;
 
   void _createPurchase() {
-    debugPrint("creating a purchase");
+    showDialog(
+        context: context,
+        builder: (context) {
+          return PurchaseStoreForm(() => setState(() {}));
+        });
   }
 
   void _navigationTapped(int page) {
@@ -91,7 +96,7 @@ class _NavScaffoldState extends State<NavScaffold> {
       ),
       body: PageView(
         children: [
-          Discover(),
+          Discover(1),
           PurchaseHistory(),
         ],
         controller: _pageController,

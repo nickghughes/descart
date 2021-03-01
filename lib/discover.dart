@@ -4,15 +4,43 @@ import 'package:descart/product.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class Discover extends StatefulWidget {
+  final int userId;
+
+  Discover(this.userId);
+
   @override
-  _DiscoverState createState() => _DiscoverState();
+  _DiscoverState createState() => _DiscoverState(userId);
 }
 
 class _DiscoverState extends State<Discover> {
-  List<Map<String, dynamic>> __recs = getRecommendations();
+  Future<List<dynamic>> __recs;
+  int userId;
+
+  _DiscoverState(this.userId);
+
+  @override
+  void initState() {
+    __recs = getRecommendations(userId);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: __recs,
+        builder: (context, data) {
+          if (data.hasData) {
+            return discover(context, data.data);
+          } else {
+            debugPrint("printing data");
+            debugPrint(data.toString());
+            return Center(child: CircularProgressIndicator());
+          }
+        });
+  }
+
+  Widget discover(BuildContext context, List<dynamic> recs) {
+    debugPrint(recs.toString());
     return Scaffold(
       body: Container(
         color: Colors.green[100],
@@ -22,12 +50,13 @@ class _DiscoverState extends State<Discover> {
             Expanded(
               child: ListView.separated(
                 separatorBuilder: (context, index) => SizedBox(height: 2),
-                itemCount: __recs.length,
+                itemCount: recs.length,
                 itemBuilder: (context, index) => RecommendationBlock(
-                  __recs[index]["productName"],
-                  __recs[index]["manufacturerName"],
-                  __recs[index]["imageUrl"],
-                  __recs[index]["numberOfStores"],
+                  recs[index]["id"],
+                  recs[index]["productName"],
+                  recs[index]["manufacturerName"],
+                  recs[index]["imageUrl"],
+                  int.parse(recs[index]["numStores"]),
                 ),
               ),
             ),
@@ -89,27 +118,37 @@ class _RecsFilterState extends State<RecsFilter> {
 }
 
 class RecommendationBlock extends StatelessWidget {
+  final int productId;
   final String productName;
   final String manufacturerName;
   final String imageUrl;
   final int numberOfStores;
   final String numberOfStoresText;
 
-  RecommendationBlock(this.productName, this.manufacturerName, this.imageUrl,
-      this.numberOfStores)
+  RecommendationBlock(this.productId, this.productName, this.manufacturerName,
+      this.imageUrl, this.numberOfStores)
       : this.numberOfStoresText = numberOfStores == 1 ? "store" : "stores";
 
   @override
   Widget build(BuildContext context) {
+    String name = productName.length > 50
+        ? productName.substring(0, 50) + "..."
+        : productName;
     return Container(
         height: 100,
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(20))),
         child: InkWell(
-          onTap: () => openProductPreview(context),
+          onTap: () => openProductPreview(context, {
+            "productId": productId,
+            "productName": productName,
+            "manufacturerName": manufacturerName,
+            "imageUrl": imageUrl,
+            "numberOfStores": numberOfStores
+          }),
           child: Container(
-            padding: EdgeInsets.all(15),
+            padding: EdgeInsets.fromLTRB(15, 5, 15, 5),
             child: Stack(
               children: [
                 Align(
@@ -118,15 +157,17 @@ class RecommendationBlock extends StatelessWidget {
                     children: [
                       Container(
                         width: 70,
-                        child: Center(child: Image.network(imageUrl)),
+                        child: imageUrl == null
+                            ? SizedBox()
+                            : Center(child: Image.network(imageUrl)),
                       ),
                       Expanded(
                         child: Container(
-                          padding: EdgeInsets.fromLTRB(15, 15, 0, 0),
+                          padding: EdgeInsets.fromLTRB(15, 20, 30, 0),
                           child: Align(
                             alignment: Alignment.topLeft,
                             child: Text(
-                              productName,
+                              name,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -144,7 +185,7 @@ class RecommendationBlock extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        manufacturerName,
+                        manufacturerName ?? "",
                         style: TextStyle(
                           fontSize: 16,
                         ),
@@ -172,14 +213,14 @@ class RecommendationBlock extends StatelessWidget {
         ));
   }
 
-  void openProductPreview(BuildContext context) {
+  void openProductPreview(BuildContext context, Map<String, dynamic> product) {
     showCupertinoModalBottomSheet<void>(
       context: context,
       expand: false,
       isDismissible: true,
       builder: (context) => SingleChildScrollView(
           controller: ModalScrollController.of(context),
-          child: ProductPreview()),
+          child: ProductPreview(product)),
     );
   }
 }

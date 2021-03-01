@@ -2,20 +2,55 @@ import 'package:descart/network.dart';
 import 'package:descart/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProductPreview extends StatefulWidget {
+  final Map<String, dynamic> product;
+
+  ProductPreview(this.product);
+
   @override
-  _ProductPreviewState createState() => _ProductPreviewState();
+  _ProductPreviewState createState() => _ProductPreviewState(product);
 }
 
 class _ProductPreviewState extends State<ProductPreview> {
-  Map<String, dynamic> _product = getProductPreview();
+  Future<List<dynamic>> _stores;
+  Map<String, dynamic> _product;
+
+  _ProductPreviewState(this._product);
+
+  void _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      debugPrint("could not open url");
+    }
+  }
+
+  @override
+  void initState() {
+    _stores = getProductStores(_product["productId"]);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    int numStores = _product["numberOfStores"];
-    String numStoresText = numStores == 1 ? "store" : "stores";
-    List<Map<String, dynamic>> stores = _product["stores"];
+    return FutureBuilder(
+        future: _stores,
+        builder: (context, data) {
+          if (data.hasData) {
+            _product["stores"] = data.data;
+            return preview(context, _product);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        });
+  }
+
+  Widget preview(BuildContext context, Map<String, dynamic> product) {
+    // int numStores = product["numStores"];
+    // String numStoresText = numStores == 1 ? "store" : "stores";
+    List<dynamic> stores = product["stores"];
 
     // sort by ascending price
     stores.sort(
@@ -42,21 +77,30 @@ class _ProductPreviewState extends State<ProductPreview> {
                     Row(
                       children: [
                         Expanded(
+                          flex: 3,
                           child: Container(
-                            width: 150,
-                            child: Image.network(_product["imageUrl"]),
+                            child: product["imageUrl"] == null
+                                ? SizedBox()
+                                : Image.network(product["imageUrl"]),
                           ),
                         ),
-                        Column(
-                          children: [
-                            Bold.withSize(_product["productName"], 24),
-                            // Bold.withSize(_product["manufacturerName"], 16)
-                            Text(
-                              _product["manufacturerName"],
-                              style: TextStyle(
-                                  fontStyle: FontStyle.italic, fontSize: 16),
-                            )
-                          ],
+                        Expanded(
+                          flex: 1,
+                          child: SizedBox(),
+                        ),
+                        Expanded(
+                          flex: 6,
+                          child: Column(
+                            children: [
+                              Bold.withSize(product["productName"], 20),
+                              // Bold.withSize(product["manufacturerName"], 16)
+                              Text(
+                                product["manufacturerName"] ?? "",
+                                style: TextStyle(
+                                    fontStyle: FontStyle.italic, fontSize: 16),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -79,10 +123,10 @@ class _ProductPreviewState extends State<ProductPreview> {
                               child: ListView.separated(
                                 separatorBuilder: (context, index) =>
                                     Divider(color: Colors.black),
-                                itemCount: _product["stores"].length,
+                                itemCount: product["stores"].length,
                                 itemBuilder: (context, index) => InkWell(
-                                  onTap: () => debugPrint("click store: " +
-                                      _product["stores"][index]["storeName"]),
+                                  onTap: () => _launchURL(
+                                      product["stores"][index]["url"]),
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -90,22 +134,25 @@ class _ProductPreviewState extends State<ProductPreview> {
                                         child: Container(
                                           padding:
                                               EdgeInsets.fromLTRB(0, 0, 5, 0),
-                                          child: Image.network(
-                                              _product["stores"][index]
-                                                  ["imageUrl"]),
+                                          child: product["stores"][index]
+                                                      ["imageUrl"] ==
+                                                  null
+                                              ? SizedBox()
+                                              : Image.network(product["stores"]
+                                                  [index]["imageUrl"]),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 4,
                                         child: Bold.withSize(
-                                            _product["stores"][index]
-                                                ["storeName"],
+                                            product["stores"][index]
+                                                ["store_name"],
                                             16),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text("\$ " +
-                                            _product["stores"][index]["price"]),
+                                            product["stores"][index]["price"]),
                                       )
                                     ],
                                   ),
