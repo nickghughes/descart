@@ -13,14 +13,13 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
 
   @override
   void initState() {
-    _purchases = getPurchaseHistory(1, "", false);
+    _purchases = getPurchaseHistory(1, "", false, 0);
     super.initState();
   }
 
-  void updateFilter(String search, bool favorite) {
-    debugPrint("update $search $favorite");
+  void updateFilter(String search, bool favorite, int sortIdx) {
     setState(() {
-      _purchases = getPurchaseHistory(1, search, favorite);
+      _purchases = getPurchaseHistory(1, search, favorite, sortIdx);
     });
   }
 
@@ -35,7 +34,8 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
         child: Column(
           children: [
             PurchaseFilter(
-              (String search, bool favorite) => updateFilter(search, favorite),
+              (String search, bool favorite, int sortIdx) =>
+                  updateFilter(search, favorite, sortIdx),
             ),
             FutureBuilder(
               future: _purchases,
@@ -82,6 +82,7 @@ class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
           purchases[index]["purchaseDate"],
           purchases[index]["imageUrl"],
           purchases[index]["price"],
+          purchases[index]["favorite"] == "1",
           purchases[index]["items"],
         ),
       ),
@@ -90,7 +91,7 @@ class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
 }
 
 class PurchaseFilter extends StatefulWidget {
-  final Function(String, bool) onUpdate;
+  final Function(String, bool, int) onUpdate;
   PurchaseFilter(this.onUpdate);
 
   @override
@@ -99,9 +100,17 @@ class PurchaseFilter extends StatefulWidget {
 
 class _PurchaseFilterState extends State<PurchaseFilter> {
   bool _favorite = false;
+  int _sortIdx = 0;
   final searchController = TextEditingController();
 
-  Function(String, bool) onUpdate;
+  static const List<String> sortOptions = [
+    "Date ↓",
+    "Date ↑",
+    "Price ↓",
+    "Price ↑"
+  ];
+
+  Function(String, bool, int) onUpdate;
   _PurchaseFilterState(this.onUpdate);
 
   @override
@@ -122,7 +131,8 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
                   Expanded(
                     child: TextField(
                       controller: searchController,
-                      onChanged: (String query) => onUpdate(query, _favorite),
+                      onChanged: (String query) =>
+                          onUpdate(query, _favorite, _sortIdx),
                       maxLength: 35,
                       maxLines: 1,
                       decoration: InputDecoration(
@@ -138,21 +148,43 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
               ),
             ),
           ),
-          SizedBox(width: 5),
+          SizedBox(width: 10),
           InkWell(
             onTap: () {
               _favorite = !_favorite;
-              onUpdate(searchController.text, _favorite);
+              onUpdate(searchController.text, _favorite, _sortIdx);
               setState(() {});
             },
             child: _favorite
                 ? Icon(Icons.star, color: Colors.yellow)
                 : Icon(Icons.star_outline),
           ),
-          SizedBox(width: 5),
-          InkWell(
-            onTap: () => debugPrint("sort"),
-            child: Icon(Icons.sort),
+          SizedBox(width: 10),
+          Container(
+            width: 48,
+            child: DropdownButton(
+                selectedItemBuilder: (BuildContext context) =>
+                    List(sortOptions.length)
+                        .map((dynamic) => Icon(Icons.sort))
+                        .toList(),
+                value: _sortIdx,
+                items: sortOptions
+                    .asMap()
+                    .map(
+                      (i, opt) => MapEntry(
+                        i,
+                        DropdownMenuItem(
+                            child: Text(opt, style: TextStyle(fontSize: 14)),
+                            value: i),
+                      ),
+                    )
+                    .values
+                    .toList(),
+                onChanged: (value) {
+                  _sortIdx = value;
+                  onUpdate(searchController.text, _favorite, _sortIdx);
+                  setState(() {});
+                }),
           ),
         ],
       ),
@@ -160,17 +192,35 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
   }
 }
 
-class PurchaseHistoryBlock extends StatelessWidget {
+class PurchaseHistoryBlock extends StatefulWidget {
   final int purchaseId;
   final String storeName;
   final String date;
   final String imageUrl;
   final String price;
+  final bool favorite;
+  final int items;
+
+  PurchaseHistoryBlock(this.purchaseId, this.storeName, this.date,
+      this.imageUrl, this.price, this.favorite, this.items);
+
+  @override
+  _PurchaseHistoryBlockState createState() => _PurchaseHistoryBlockState(
+      purchaseId, storeName, date, imageUrl, price, favorite, items);
+}
+
+class _PurchaseHistoryBlockState extends State<PurchaseHistoryBlock> {
+  final int purchaseId;
+  final String storeName;
+  final String date;
+  final String imageUrl;
+  final String price;
+  bool favorite;
   final int items;
   final String itemsText;
 
-  PurchaseHistoryBlock(this.purchaseId, this.storeName, this.date,
-      this.imageUrl, this.price, this.items)
+  _PurchaseHistoryBlockState(this.purchaseId, this.storeName, this.date,
+      this.imageUrl, this.price, this.favorite, this.items)
       : this.itemsText = items == 1 ? "item" : "items";
 
   @override
@@ -187,6 +237,7 @@ class PurchaseHistoryBlock extends StatelessWidget {
           "purchaseDate": date,
           "imageUrl": imageUrl,
           "price": price,
+          "favorite": favorite,
           "numItems": items
         }),
         child: Container(
@@ -271,8 +322,10 @@ class PurchaseHistoryBlock extends StatelessWidget {
     showDialog(
         context: context,
         builder: (context) {
-          debugPrint(purchase.toString());
-          return PurchasePreview(purchase);
+          return PurchasePreview(purchase, (bool _favorite) {
+            this.favorite = _favorite;
+            setState(() {});
+          });
         });
   }
 }
