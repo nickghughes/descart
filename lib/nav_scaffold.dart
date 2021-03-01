@@ -1,7 +1,8 @@
 import 'package:descart/discover.dart';
 import 'package:descart/history.dart';
-import 'package:descart/settings.dart';
 import 'package:flutter/material.dart';
+import 'package:descart/sign_in.dart';
+import 'package:descart/login_page.dart';
 
 class NavScaffold extends StatefulWidget {
   @override
@@ -51,16 +52,47 @@ class _NavScaffoldState extends State<NavScaffold> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      // appBar: AppBar(
-      //   // Here we take the value from the MyHomePage object that was created by
-      //   // the App.build method, and use it to set our appbar title.
-      //   title: Text(widget.title),
-      // ),
+      appBar: AppBar(
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(_page == 0 ? "Discover" : "Purchases"),
+        actions: [
+          Container(
+            child: InkWell(
+              child: Column(
+                children: [
+                  Icon(Icons.exit_to_app),
+                  InkWell(
+                    child: Text("Sign Out",
+                        style: TextStyle(
+                          color: Colors.white,
+                        )),
+                    onTap: () {
+                      signOutGoogle();
+                      Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) {
+                        return LoginPage();
+                      }), ModalRoute.withName('/'));
+                    },
+                  ),
+                ],
+              ),
+              onTap: () {
+                signOutGoogle();
+                Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) {
+                  return LoginPage();
+                }), ModalRoute.withName('/'));
+              },
+            ),
+            padding: EdgeInsets.fromLTRB(0, 10, 10, 0),
+          )
+        ],
+      ),
       body: PageView(
         children: [
           Discover(),
           PurchaseHistory(),
-          Settings(),
         ],
         controller: _pageController,
         onPageChanged: _onPageChanged,
@@ -79,10 +111,6 @@ class _NavScaffoldState extends State<NavScaffold> {
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Purchases',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
           ),
         ],
         onTap: _navigationTapped,

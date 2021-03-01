@@ -9,13 +9,10 @@ class PurchaseHistory extends StatefulWidget {
 
 class _PurchaseHistoryState extends State<PurchaseHistory> {
   List<Map<String, dynamic>> _purchases = getPurchaseHistory();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Purchase History"),
-      ),
       body: Container(
         color: Colors.green[100],
         child: Column(
@@ -23,17 +20,15 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
             PurchaseFilter(),
             Expanded(
               child: ListView.separated(
-                separatorBuilder: (context, index) =>
-                  SizedBox(height: 2),
+                separatorBuilder: (context, index) => SizedBox(height: 2),
                 itemCount: _purchases.length,
-                itemBuilder: (context, index) =>
-                  PurchaseHistoryBlock(
-                    _purchases[index]["storeName"],
-                    _purchases[index]["purchaseDate"], 
-                    _purchases[index]["imageUrl"],
-                    _purchases[index]["price"],
-                    _purchases[index]["items"],
-                  ),
+                itemBuilder: (context, index) => PurchaseHistoryBlock(
+                  _purchases[index]["storeName"],
+                  _purchases[index]["purchaseDate"],
+                  _purchases[index]["imageUrl"],
+                  _purchases[index]["price"],
+                  _purchases[index]["items"],
+                ),
               ),
             ),
           ],
@@ -50,7 +45,7 @@ class PurchaseFilter extends StatefulWidget {
 
 class _PurchaseFilterState extends State<PurchaseFilter> {
   String _query = "";
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -62,9 +57,8 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
             child: Container(
               padding: EdgeInsets.fromLTRB(25, 0, 10, 2),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(20))
-              ),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(20))),
               child: Row(
                 children: [
                   Expanded(
@@ -101,18 +95,18 @@ class PurchaseHistoryBlock extends StatelessWidget {
   final String price;
   final int items;
   final String itemsText;
-  
-  PurchaseHistoryBlock(this.storeName, this.date, this.imageUrl, this.price, this.items) 
-    : this.itemsText = items == 1 ? "item" : "items";
+
+  PurchaseHistoryBlock(
+      this.storeName, this.date, this.imageUrl, this.price, this.items)
+      : this.itemsText = items == 1 ? "item" : "items";
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 100,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(20))
-      ),
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(20))),
       child: InkWell(
         onTap: () => openPurchasePreview(context),
         child: Container(
@@ -190,10 +184,9 @@ class PurchaseHistoryBlock extends StatelessWidget {
 
   void openPurchasePreview(BuildContext context) {
     showDialog(
-      context: context,
-      builder: (context) {
-        return PurchasePreview();
-      }
-    );
+        context: context,
+        builder: (context) {
+          return PurchasePreview();
+        });
   }
 }

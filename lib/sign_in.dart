@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 // based on https://medium.com/flutter-community/flutter-implementing-google-sign-in-71888bca24ed
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -9,10 +11,18 @@ String name;
 String email;
 String imageUrl;
 
-Future<String> signInWithGoogle() async {
+Future<User> signInWithGoogle() async {
   final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
+  if (googleSignInAccount == null) {
+    return null;
+  }
+
   final GoogleSignInAuthentication googleSignInAuthentication =
       await googleSignInAccount.authentication;
+
+  if (googleSignInAuthentication == null) {
+    return null;
+  }
 
   final AuthCredential credential = GoogleAuthProvider.credential(
     accessToken: googleSignInAuthentication.accessToken,
@@ -38,8 +48,11 @@ Future<String> signInWithGoogle() async {
   }
   email = user.email;
   imageUrl = user.photoURL;
+  debugPrint("Name: " + name);
+  debugPrint("photoURL: " + imageUrl);
+  debugPrint("email: " + email);
 
-  return 'signInWithGoogle succeeded';
+  return user;
 }
 
 void signOutGoogle() async {

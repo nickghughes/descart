@@ -14,9 +14,6 @@ class _DiscoverState extends State<Discover> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Discover"),
-      ),
       body: Container(
         color: Colors.green[100],
         child: Column(

@@ -30,6 +30,7 @@ dependencies:
   # OAuth with Google-Sign-in
   firebase_auth: ^0.20.0+1
   google_sign_in: ^4.5.9
+  firebase_core: ^0.7.0
 
   # state management
   provider: ^4.3.3
