@@ -6,18 +6,24 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class PurchasePreview extends StatefulWidget {
   Map<String, dynamic> purchase;
+  Function(bool) onUpdateFavorite;
 
-  PurchasePreview(this.purchase);
+  PurchasePreview(this.purchase, this.onUpdateFavorite);
 
   @override
-  _PurchasePreviewState createState() => _PurchasePreviewState(purchase);
+  _PurchasePreviewState createState() =>
+      _PurchasePreviewState(purchase, onUpdateFavorite);
 }
 
 class _PurchasePreviewState extends State<PurchasePreview> {
   Map<String, dynamic> _purchase;
   Future<List<dynamic>> _items;
+  Function(bool) onUpdateFavorite;
 
-  _PurchasePreviewState(this._purchase);
+  bool _favorite;
+
+  _PurchasePreviewState(this._purchase, this.onUpdateFavorite)
+      : this._favorite = _purchase["favorite"];
 
   @override
   void initState() {
@@ -32,7 +38,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
       isDismissible: true,
       builder: (context) => SingleChildScrollView(
           controller: ModalScrollController.of(context),
-          child: ProductPreview(product)),
+          child: ProductPreview(product, (bool) {})),
     );
   }
 
@@ -81,8 +87,15 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                       Expanded(
                         flex: 1,
                         child: InkWell(
-                          onTap: () => debugPrint("toggle favorite"),
-                          child: true
+                          onTap: () async {
+                            debugPrint(_favorite.toString());
+                            _favorite = !_favorite;
+                            await favoritePurchase(
+                                1, purchase["purchaseId"], _favorite);
+                            onUpdateFavorite(_favorite);
+                            setState(() {});
+                          },
+                          child: _favorite
                               ? Icon(Icons.star, color: Colors.yellow)
                               : Icon(Icons.star_outline),
                         ),

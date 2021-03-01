@@ -48,7 +48,6 @@ class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
                   suggestionsCallback: (pattern) async {
                     List<dynamic> suggestions =
                         await getStoreSuggestions(pattern);
-                    debugPrint(suggestions.toString());
                     return suggestions;
                   },
                   itemBuilder: (context, suggestion) {
@@ -60,7 +59,6 @@ class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
                     );
                   },
                   onSuggestionSelected: (suggestion) {
-                    debugPrint("opening $suggestion");
                     Navigator.of(context).pop();
                     showDialog(
                         context: context,
@@ -130,7 +128,6 @@ class _PurchaseProductFormState extends State<PurchaseProductForm> {
                     );
                   },
                   onSuggestionSelected: (suggestion) {
-                    debugPrint("opening $suggestion");
                     Navigator.of(context).pop();
                     showDialog(
                         context: context,
@@ -294,7 +291,6 @@ class _PurchaseFormState extends State<PurchaseForm> {
                 })
           .toList()
     };
-    debugPrint("Saving purchase with the following structure: $purchase");
     await postPurchase(purchase);
     Navigator.of(context).pop();
     onSave();
@@ -452,7 +448,6 @@ class _PurchaseFormState extends State<PurchaseForm> {
                                               builder: (context) {
                                                 return PurchaseProductForm(
                                                     (product) {
-                                                  debugPrint("$product");
                                                   items.add(product);
                                                   setState(() => {});
                                                   Timer(

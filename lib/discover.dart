@@ -26,7 +26,6 @@ class _DiscoverState extends State<Discover> {
   }
 
   void updateFilter(String search, bool favorite) {
-    debugPrint("update $search $favorite");
     setState(() {
       __recs = getRecommendations(1, search, favorite);
     });
@@ -34,41 +33,42 @@ class _DiscoverState extends State<Discover> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: __recs,
-        builder: (context, data) {
-          if (data.hasData) {
-            return discover(context, data.data);
-          } else {
-            debugPrint("printing data");
-            debugPrint(data.toString());
-            return Center(child: CircularProgressIndicator());
-          }
-        });
-  }
-
-  Widget discover(BuildContext context, List<dynamic> recs) {
-    debugPrint(recs.toString());
     return Scaffold(
       body: Container(
         color: Colors.green[100],
         child: Column(
           children: [
             RecsFilter(updateFilter),
-            Expanded(
-              child: ListView.separated(
-                separatorBuilder: (context, index) => SizedBox(height: 2),
-                itemCount: recs.length,
-                itemBuilder: (context, index) => RecommendationBlock(
-                  recs[index]["id"],
-                  recs[index]["productName"],
-                  recs[index]["manufacturerName"],
-                  recs[index]["imageUrl"],
-                  int.parse(recs[index]["numStores"]),
-                ),
-              ),
+            FutureBuilder(
+              future: __recs,
+              builder: (context, data) {
+                if (data.connectionState != ConnectionState.done) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (data.hasError) {
+                  return SizedBox();
+                }
+                return discover(context, data.data);
+              },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget discover(BuildContext context, List<dynamic> recs) {
+    return Expanded(
+      child: ListView.separated(
+        separatorBuilder: (context, index) => SizedBox(height: 2),
+        itemCount: recs.length,
+        itemBuilder: (context, index) => RecommendationBlock(
+          recs[index]["id"],
+          recs[index]["productName"],
+          recs[index]["manufacturerName"],
+          recs[index]["imageUrl"],
+          recs[index]["favorite"] == "1",
+          int.parse(recs[index]["numStores"]),
         ),
       ),
     );
@@ -76,7 +76,7 @@ class _DiscoverState extends State<Discover> {
 }
 
 class RecsFilter extends StatefulWidget {
-  Function(String, bool) onUpdate;
+  final Function(String, bool) onUpdate;
   RecsFilter(this.onUpdate);
 
   @override
@@ -141,16 +141,38 @@ class _RecsFilterState extends State<RecsFilter> {
   }
 }
 
-class RecommendationBlock extends StatelessWidget {
+class RecommendationBlock extends StatefulWidget {
   final int productId;
   final String productName;
   final String manufacturerName;
   final String imageUrl;
+  final bool favorite;
+  final int numberOfStores;
+
+  RecommendationBlock(this.productId, this.productName, this.manufacturerName,
+      this.imageUrl, this.favorite, this.numberOfStores);
+
+  @override
+  _RecommendationBlockState createState() => _RecommendationBlockState(
+      productId,
+      productName,
+      manufacturerName,
+      imageUrl,
+      favorite,
+      numberOfStores);
+}
+
+class _RecommendationBlockState extends State<RecommendationBlock> {
+  final int productId;
+  final String productName;
+  final String manufacturerName;
+  final String imageUrl;
+  bool favorite;
   final int numberOfStores;
   final String numberOfStoresText;
 
-  RecommendationBlock(this.productId, this.productName, this.manufacturerName,
-      this.imageUrl, this.numberOfStores)
+  _RecommendationBlockState(this.productId, this.productName,
+      this.manufacturerName, this.imageUrl, this.favorite, this.numberOfStores)
       : this.numberOfStoresText = numberOfStores == 1 ? "store" : "stores";
 
   @override
@@ -169,6 +191,7 @@ class RecommendationBlock extends StatelessWidget {
             "productName": productName,
             "manufacturerName": manufacturerName,
             "imageUrl": imageUrl,
+            "favorite": favorite,
             "numberOfStores": numberOfStores
           }),
           child: Container(
@@ -243,8 +266,12 @@ class RecommendationBlock extends StatelessWidget {
       expand: false,
       isDismissible: true,
       builder: (context) => SingleChildScrollView(
-          controller: ModalScrollController.of(context),
-          child: ProductPreview(product)),
+        controller: ModalScrollController.of(context),
+        child: ProductPreview(product, (bool _favorite) {
+          this.favorite = _favorite;
+          setState(() {});
+        }),
+      ),
     );
   }
 }

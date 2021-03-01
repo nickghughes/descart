@@ -6,18 +6,24 @@ import 'package:url_launcher/url_launcher.dart';
 
 class ProductPreview extends StatefulWidget {
   final Map<String, dynamic> product;
+  final Function(bool) onUpdateFavorite;
 
-  ProductPreview(this.product);
+  ProductPreview(this.product, this.onUpdateFavorite);
 
   @override
-  _ProductPreviewState createState() => _ProductPreviewState(product);
+  _ProductPreviewState createState() =>
+      _ProductPreviewState(product, onUpdateFavorite);
 }
 
 class _ProductPreviewState extends State<ProductPreview> {
   Future<List<dynamic>> _stores;
   Map<String, dynamic> _product;
+  Function(bool) onUpdateFavorite;
 
-  _ProductPreviewState(this._product);
+  bool _favorite;
+
+  _ProductPreviewState(this._product, this.onUpdateFavorite)
+      : _favorite = _product["favorite"];
 
   void _launchURL(String url) async {
     if (await canLaunch(url)) {
@@ -94,9 +100,18 @@ class _ProductPreviewState extends State<ProductPreview> {
                             children: [
                               Align(
                                 alignment: Alignment.topRight,
-                                child: true
-                                    ? Icon(Icons.star, color: Colors.yellow)
-                                    : Icon(Icons.star_outline),
+                                child: InkWell(
+                                  onTap: () async {
+                                    _favorite = !_favorite;
+                                    await favoriteProduct(
+                                        1, product["productId"], _favorite);
+                                    onUpdateFavorite(_favorite);
+                                    setState(() {});
+                                  },
+                                  child: _favorite
+                                      ? Icon(Icons.star, color: Colors.yellow)
+                                      : Icon(Icons.star_outline),
+                                ),
                               ),
                               Bold.withSize(product["productName"], 20),
                               // Bold.withSize(product["manufacturerName"], 16)
