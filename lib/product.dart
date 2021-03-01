@@ -81,7 +81,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                           child: Container(
                             child: product["imageUrl"] == null
                                 ? SizedBox()
-                                : Image.network(product["imageUrl"]),
+                                : ImageWithUrl(product["imageUrl"]),
                           ),
                         ),
                         Expanded(
@@ -92,6 +92,12 @@ class _ProductPreviewState extends State<ProductPreview> {
                           flex: 6,
                           child: Column(
                             children: [
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: true
+                                    ? Icon(Icons.star, color: Colors.yellow)
+                                    : Icon(Icons.star_outline),
+                              ),
                               Bold.withSize(product["productName"], 20),
                               // Bold.withSize(product["manufacturerName"], 16)
                               Text(
@@ -138,7 +144,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                                                       ["imageUrl"] ==
                                                   null
                                               ? SizedBox()
-                                              : Image.network(product["stores"]
+                                              : ImageWithUrl(product["stores"]
                                                   [index]["imageUrl"]),
                                         ),
                                       ),

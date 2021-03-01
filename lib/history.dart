@@ -1,5 +1,6 @@
 import 'package:descart/network.dart';
 import 'package:descart/purchase.dart';
+import 'package:descart/util.dart';
 import 'package:flutter/material.dart';
 
 class PurchaseHistory extends StatefulWidget {
@@ -12,8 +13,15 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
 
   @override
   void initState() {
-    _purchases = getPurchaseHistory(1);
+    _purchases = getPurchaseHistory(1, "", false);
     super.initState();
+  }
+
+  void updateFilter(String search, bool favorite) {
+    debugPrint("update $search $favorite");
+    setState(() {
+      _purchases = getPurchaseHistory(1, search, favorite);
+    });
   }
 
   @override
@@ -23,17 +31,19 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
         color: Colors.green[100],
         child: Column(
           children: [
-            PurchaseFilter(),
+            PurchaseFilter(
+              (String search, bool favorite) => updateFilter(search, favorite),
+            ),
             FutureBuilder(
               future: _purchases,
               builder: (context, data) {
-                if (data.hasData) {
-                  return PurchaseHistoryBody(data.data);
-                } else {
-                  debugPrint("printing data");
-                  debugPrint(data.toString());
+                if (data.connectionState != ConnectionState.done) {
                   return Center(child: CircularProgressIndicator());
                 }
+                if (data.hasError) {
+                  return SizedBox();
+                }
+                return PurchaseHistoryBody(data.data);
               },
             ),
           ],
@@ -44,7 +54,7 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
 }
 
 class PurchaseHistoryBody extends StatefulWidget {
-  List<dynamic> purchases;
+  final List<dynamic> purchases;
   PurchaseHistoryBody(this.purchases);
 
   @override
@@ -77,12 +87,19 @@ class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
 }
 
 class PurchaseFilter extends StatefulWidget {
+  final Function(String, bool) onUpdate;
+  PurchaseFilter(this.onUpdate);
+
   @override
-  _PurchaseFilterState createState() => _PurchaseFilterState();
+  _PurchaseFilterState createState() => _PurchaseFilterState(onUpdate);
 }
 
 class _PurchaseFilterState extends State<PurchaseFilter> {
-  String _query = "";
+  bool _favorite = false;
+  final searchController = TextEditingController();
+
+  Function(String, bool) onUpdate;
+  _PurchaseFilterState(this.onUpdate);
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +118,8 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: searchController,
+                      onChanged: (String query) => onUpdate(query, _favorite),
                       maxLength: 35,
                       maxLines: 1,
                       decoration: InputDecoration(
@@ -117,9 +136,21 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
             ),
           ),
           SizedBox(width: 5),
-          Icon(Icons.star_border),
+          InkWell(
+            onTap: () {
+              _favorite = !_favorite;
+              onUpdate(searchController.text, _favorite);
+              setState(() {});
+            },
+            child: _favorite
+                ? Icon(Icons.star, color: Colors.yellow)
+                : Icon(Icons.star_outline),
+          ),
           SizedBox(width: 5),
-          Icon(Icons.sort)
+          InkWell(
+            onTap: () => debugPrint("sort"),
+            child: Icon(Icons.sort),
+          ),
         ],
       ),
     );
@@ -166,9 +197,10 @@ class PurchaseHistoryBlock extends StatelessWidget {
                     Container(
                       width: 70,
                       child: Center(
-                          child: imageUrl == null
-                              ? Icon(Icons.shopping_bag)
-                              : Image.network(imageUrl)),
+                        child: imageUrl == null
+                            ? Icon(Icons.shopping_bag)
+                            : ImageWithUrl(imageUrl),
+                      ),
                     ),
                     Container(
                       padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
