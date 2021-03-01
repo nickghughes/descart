@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:descart/network.dart';
 import 'package:descart/product.dart';
+import 'package:descart/util.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class Discover extends StatefulWidget {
@@ -20,8 +21,15 @@ class _DiscoverState extends State<Discover> {
 
   @override
   void initState() {
-    __recs = getRecommendations(userId);
+    __recs = getRecommendations(userId, "", false);
     super.initState();
+  }
+
+  void updateFilter(String search, bool favorite) {
+    debugPrint("update $search $favorite");
+    setState(() {
+      __recs = getRecommendations(1, search, favorite);
+    });
   }
 
   @override
@@ -49,7 +57,7 @@ class _DiscoverState extends State<Discover> {
         color: Colors.green[100],
         child: Column(
           children: [
-            RecsFilter(),
+            RecsFilter(updateFilter),
             Expanded(
               child: ListView.separated(
                 separatorBuilder: (context, index) => SizedBox(height: 2),
@@ -71,12 +79,19 @@ class _DiscoverState extends State<Discover> {
 }
 
 class RecsFilter extends StatefulWidget {
+  Function(String, bool) onUpdate;
+  RecsFilter(this.onUpdate);
+
   @override
-  _RecsFilterState createState() => _RecsFilterState();
+  _RecsFilterState createState() => _RecsFilterState(onUpdate);
 }
 
 class _RecsFilterState extends State<RecsFilter> {
-  String _query = "";
+  bool _favorite = false;
+  final searchController = TextEditingController();
+
+  Function(String, bool) onUpdate;
+  _RecsFilterState(this.onUpdate);
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +110,8 @@ class _RecsFilterState extends State<RecsFilter> {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: searchController,
+                      onChanged: (String query) => onUpdate(query, _favorite),
                       maxLength: 35,
                       maxLines: 1,
                       decoration: InputDecoration(
@@ -111,9 +128,16 @@ class _RecsFilterState extends State<RecsFilter> {
             ),
           ),
           SizedBox(width: 5),
-          Icon(Icons.star_border),
-          SizedBox(width: 5),
-          Icon(Icons.sort)
+          InkWell(
+            onTap: () {
+              _favorite = !_favorite;
+              onUpdate(searchController.text, _favorite);
+              setState(() {});
+            },
+            child: _favorite
+                ? Icon(Icons.star, color: Colors.yellow)
+                : Icon(Icons.star_outline),
+          ),
         ],
       ),
     );
@@ -162,7 +186,7 @@ class RecommendationBlock extends StatelessWidget {
                         width: 70,
                         child: imageUrl == null
                             ? SizedBox()
-                            : Center(child: Image.network(imageUrl)),
+                            : Center(child: ImageWithUrl(imageUrl)),
                       ),
                       Expanded(
                         child: Container(

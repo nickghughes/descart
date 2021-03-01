@@ -55,7 +55,7 @@ class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
                     return ListTile(
                       leading: suggestion["imageUrl"] == null
                           ? SizedBox()
-                          : Image.network(suggestion["imageUrl"]),
+                          : ImageWithUrl(suggestion["imageUrl"]),
                       title: Text(suggestion['name']),
                     );
                   },
@@ -121,7 +121,7 @@ class _PurchaseProductFormState extends State<PurchaseProductForm> {
                           ? SizedBox()
                           : Container(
                               width: 50,
-                              child: Image.network(suggestion["imageUrl"]),
+                              child: ImageWithUrl(suggestion["imageUrl"]),
                             ),
                       title: Text(suggestion['name']),
                       subtitle: suggestion["manufacturerName"] == null
@@ -340,7 +340,7 @@ class _PurchaseFormState extends State<PurchaseForm> {
                           width: 100,
                           child: store["imageUrl"] == null
                               ? SizedBox()
-                              : Image.network(store["imageUrl"]),
+                              : ImageWithUrl(store["imageUrl"]),
                         ),
                         Expanded(
                           child: Container(
@@ -415,7 +415,7 @@ class _PurchaseFormState extends State<PurchaseForm> {
                                                             ["imageUrl"] ==
                                                         null
                                                     ? SizedBox()
-                                                    : Image.network(items[index]
+                                                    : ImageWithUrl(items[index]
                                                         ["imageUrl"]),
                                               ),
                                             ),

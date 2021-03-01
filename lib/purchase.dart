@@ -75,9 +75,26 @@ class _PurchasePreviewState extends State<PurchasePreview> {
               children: [
                 Align(
                   alignment: Alignment.topRight,
-                  child: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Icon(Icons.close),
+                  child: Row(
+                    children: [
+                      Expanded(flex: 8, child: SizedBox()),
+                      Expanded(
+                        flex: 1,
+                        child: InkWell(
+                          onTap: () => debugPrint("toggle favorite"),
+                          child: true
+                              ? Icon(Icons.star, color: Colors.yellow)
+                              : Icon(Icons.star_outline),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Icon(Icons.close),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Column(
@@ -88,7 +105,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                           width: 100,
                           child: purchase["imageUrl"] == null
                               ? Icon(Icons.shopping_bag)
-                              : Image.network(purchase["imageUrl"]),
+                              : ImageWithUrl(purchase["imageUrl"]),
                         ),
                         Expanded(
                           child: Container(
@@ -175,9 +192,8 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                                         ["imageUrl"] ==
                                                     null
                                                 ? SizedBox()
-                                                : Image.network(
-                                                    purchase["items"][index]
-                                                        ["imageUrl"])),
+                                                : ImageWithUrl(purchase["items"]
+                                                    [index]["imageUrl"])),
                                       ),
                                       Expanded(
                                         flex: 4,

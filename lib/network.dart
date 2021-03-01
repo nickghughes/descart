@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-Future<List<dynamic>> getPurchaseHistory(int userId) async {
-  List<dynamic> purchases = await query("purchases/$userId");
+Future<List<dynamic>> getPurchaseHistory(
+    int userId, String search, bool favorite) async {
+  List<dynamic> purchases = await http
+      .get(
+          "http://localhost:3333/api/descart/purchases/$userId?search=$search&favorite=$favorite")
+      .then((res) => JsonDecoder().convert(res.body));
   debugPrint(purchases.toString());
   return purchases;
 }
 
-Future<List<dynamic>> getRecommendations(int userId) {
-  return query("discover/$userId").then((items) {
-    debugPrint(items.toString());
-    return items;
-  });
+Future<List<dynamic>> getRecommendations(
+    int userId, String search, bool favorite) async {
+  return await http
+      .get(
+          "http://localhost:3333/api/descart/discover/$userId?search=$search&favorite=$favorite")
+      .then((res) => JsonDecoder().convert(res.body));
 }
 
 Future<List<dynamic>> getPurchaseItems(int purchaseId) async {
@@ -55,9 +60,8 @@ Future<void> postPurchase(Map<String, dynamic> purchase) async {
 }
 
 Future<dynamic> query(String path, [Map<String, dynamic> params]) {
-  return http
-      .get(Uri.http('localhost:3333', 'api/descart/$path', params))
-      .then((res) {
+  Uri uri = Uri.http('localhost:3333', 'api/descart/$path', params);
+  return http.get(uri).then((res) {
     return JsonDecoder().convert(res.body);
-  });
+  }).catchError((err) => {debugPrint(err)});
 }
