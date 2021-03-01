@@ -19,9 +19,6 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Purchase History"),
-      ),
       body: Container(
         color: Colors.green[100],
         child: Column(

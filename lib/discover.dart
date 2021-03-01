@@ -42,9 +42,6 @@ class _DiscoverState extends State<Discover> {
   Widget discover(BuildContext context, List<dynamic> recs) {
     debugPrint(recs.toString());
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Discover"),
-      ),
       body: Container(
         color: Colors.green[100],
         child: Column(
