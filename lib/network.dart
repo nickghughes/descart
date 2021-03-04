@@ -80,6 +80,10 @@ Future<void> favoritePurchase(int userId, int purchaseId, bool favorite) async {
       body: body);
 }
 
+Future<void> deletePurchase(int purchaseId) async {
+  await http.delete('http://localhost:3333/api/descart/purchase/$purchaseId');
+}
+
 Future<dynamic> query(String path, [Map<String, dynamic> params]) {
   Uri uri = Uri.http('localhost:3333', 'api/descart/$path', params);
   return http.get(uri).then((res) {

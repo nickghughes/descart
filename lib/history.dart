@@ -71,6 +71,7 @@ class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
   Widget build(BuildContext context) {
     return Expanded(
       child: ListView.separated(
+        key: Key(purchases.length.toString()),
         separatorBuilder: (context, index) => SizedBox(height: 2),
         itemCount: purchases.length,
         itemBuilder: (context, index) => PurchaseHistoryBlock(
@@ -81,6 +82,10 @@ class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
           purchases[index]["price"],
           purchases[index]["favorite"] == "1",
           purchases[index]["items"],
+          () {
+            purchases.removeAt(index);
+            setState(() {});
+          },
         ),
       ),
     );
@@ -197,13 +202,14 @@ class PurchaseHistoryBlock extends StatefulWidget {
   final String price;
   final bool favorite;
   final int items;
+  final Function onDelete;
 
   PurchaseHistoryBlock(this.purchaseId, this.storeName, this.date,
-      this.imageUrl, this.price, this.favorite, this.items);
+      this.imageUrl, this.price, this.favorite, this.items, this.onDelete);
 
   @override
   _PurchaseHistoryBlockState createState() => _PurchaseHistoryBlockState(
-      purchaseId, storeName, date, imageUrl, price, favorite, items);
+      purchaseId, storeName, date, imageUrl, price, favorite, items, onDelete);
 }
 
 class _PurchaseHistoryBlockState extends State<PurchaseHistoryBlock> {
@@ -216,8 +222,10 @@ class _PurchaseHistoryBlockState extends State<PurchaseHistoryBlock> {
   final int items;
   final String itemsText;
 
+  final Function onDelete;
+
   _PurchaseHistoryBlockState(this.purchaseId, this.storeName, this.date,
-      this.imageUrl, this.price, this.favorite, this.items)
+      this.imageUrl, this.price, this.favorite, this.items, this.onDelete)
       : this.itemsText = items == 1 ? "item" : "items";
 
   @override
@@ -322,7 +330,7 @@ class _PurchaseHistoryBlockState extends State<PurchaseHistoryBlock> {
           return PurchasePreview(purchase, (bool _favorite) {
             this.favorite = _favorite;
             setState(() {});
-          });
+          }, onDelete);
         });
   }
 }

@@ -7,22 +7,24 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 class PurchasePreview extends StatefulWidget {
   final Map<String, dynamic> purchase;
   final Function(bool) onUpdateFavorite;
+  final Function onDelete;
 
-  PurchasePreview(this.purchase, this.onUpdateFavorite);
+  PurchasePreview(this.purchase, this.onUpdateFavorite, this.onDelete);
 
   @override
   _PurchasePreviewState createState() =>
-      _PurchasePreviewState(purchase, onUpdateFavorite);
+      _PurchasePreviewState(purchase, onUpdateFavorite, onDelete);
 }
 
 class _PurchasePreviewState extends State<PurchasePreview> {
   Map<String, dynamic> _purchase;
   Future<List<dynamic>> _items;
   Function(bool) onUpdateFavorite;
+  final Function onDelete;
 
   bool _favorite;
 
-  _PurchasePreviewState(this._purchase, this.onUpdateFavorite)
+  _PurchasePreviewState(this._purchase, this.onUpdateFavorite, this.onDelete)
       : this._favorite = _purchase["favorite"];
 
   @override
@@ -39,6 +41,31 @@ class _PurchasePreviewState extends State<PurchasePreview> {
       builder: (context) => SingleChildScrollView(
           controller: ModalScrollController.of(context),
           child: ProductPreview(product, (bool) {})),
+    );
+  }
+
+  void areYouSureDelete(BuildContext context, Function onDelete) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Delete Purchase"),
+          content: Text("Are you sure you want to delete this purchase?"),
+          actions: [
+            FlatButton(
+              child: Text("Delete"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                onDelete();
+              },
+            ),
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -283,7 +310,14 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                             ),
                             SizedBox(height: 100),
                             GestureDetector(
-                              onTap: () => debugPrint("delete purchase"),
+                              onTap: () => areYouSureDelete(
+                                context,
+                                () async {
+                                  await deletePurchase(purchase["purchaseId"]);
+                                  onDelete();
+                                  Navigator.of(context).pop();
+                                },
+                              ),
                               child: Text(
                                 "Delete Purchase",
                                 style: TextStyle(color: Colors.red),
