@@ -7,7 +7,7 @@ Future<List<dynamic>> getPurchaseHistory(
   debugPrint("$sortIdx");
   List<dynamic> purchases = await http
       .get(
-          "http://localhost:3333/api/descart/purchases/$userId?search=$search&favorite=$favorite&sort=$sortIdx")
+          "http://192.168.1.189:3333/api/descart/purchases/$userId?search=$search&favorite=$favorite&sort=$sortIdx")
       .then((res) => JsonDecoder().convert(res.body));
   return purchases;
 }
@@ -16,7 +16,7 @@ Future<List<dynamic>> getRecommendations(
     int userId, String search, bool favorite) async {
   return await http
       .get(
-          "http://localhost:3333/api/descart/discover/$userId?search=$search&favorite=$favorite")
+          "http://192.168.1.189:3333/api/descart/discover/$userId?search=$search&favorite=$favorite")
       .then((res) => JsonDecoder().convert(res.body));
 }
 
@@ -33,7 +33,7 @@ Future<List<dynamic>> getProductStores(int productId) {
 
 Future<List<dynamic>> getProductSuggestions(String q) async {
   dynamic res = await http.get(Uri.http(
-      'localhost:3333', 'api/descart/autocomplete/product', {"query": q}));
+      '192.168.1.189:3333', 'api/descart/autocomplete/product', {"query": q}));
   dynamic result = JsonDecoder().convert(res.body);
   if (q.length > 0) result.add({"name": q});
   return result;
@@ -41,13 +41,13 @@ Future<List<dynamic>> getProductSuggestions(String q) async {
 
 Future<List<dynamic>> getStoreSuggestions(String q) async {
   dynamic res = await http.get(Uri.http(
-      'localhost:3333', 'api/descart/autocomplete/store', {"query": q}));
+      '192.168.1.189:3333', 'api/descart/autocomplete/store', {"query": q}));
   return JsonDecoder().convert(res.body);
 }
 
 Future<void> postPurchase(Map<String, dynamic> purchase) async {
   String body = json.encode(purchase);
-  await http.post(Uri.http('localhost:3333', 'api/descart/purchase'),
+  await http.post(Uri.http('192.168.1.189:3333', 'api/descart/purchase'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -60,7 +60,7 @@ Future<void> favoriteProduct(int userId, int productId, bool favorite) async {
     "product_id": productId,
     "favorite": favorite.toString()
   });
-  await http.post(Uri.http('localhost:3333', 'api/descart/favoriteproduct'),
+  await http.post(Uri.http('192.168.1.189:3333', 'api/descart/favoriteproduct'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -73,7 +73,8 @@ Future<void> favoritePurchase(int userId, int purchaseId, bool favorite) async {
     "purchase_id": purchaseId,
     "favorite": favorite.toString()
   });
-  await http.post(Uri.http('localhost:3333', 'api/descart/favoritepurchase'),
+  await http.post(
+      Uri.http('192.168.1.189:3333', 'api/descart/favoritepurchase'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -81,11 +82,12 @@ Future<void> favoritePurchase(int userId, int purchaseId, bool favorite) async {
 }
 
 Future<void> deletePurchase(int purchaseId) async {
-  await http.delete('http://localhost:3333/api/descart/purchase/$purchaseId');
+  await http
+      .delete('http://192.168.1.189:3333/api/descart/purchase/$purchaseId');
 }
 
 Future<dynamic> query(String path, [Map<String, dynamic> params]) {
-  Uri uri = Uri.http('localhost:3333', 'api/descart/$path', params);
+  Uri uri = Uri.http('192.168.1.189:3333', 'api/descart/$path', params);
   return http.get(uri).then((res) {
     return JsonDecoder().convert(res.body);
   });

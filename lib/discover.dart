@@ -59,18 +59,35 @@ class _DiscoverState extends State<Discover> {
 
   Widget discover(BuildContext context, List<dynamic> recs) {
     return Expanded(
-      child: ListView.separated(
-        separatorBuilder: (context, index) => SizedBox(height: 2),
-        itemCount: recs.length,
-        itemBuilder: (context, index) => RecommendationBlock(
-          recs[index]["id"],
-          recs[index]["productName"],
-          recs[index]["manufacturerName"],
-          recs[index]["imageUrl"],
-          recs[index]["favorite"] == "1",
-          int.parse(recs[index]["numStores"]),
-        ),
+      child: GridView.extent(
+        maxCrossAxisExtent: 150,
+        mainAxisSpacing: 2,
+        crossAxisSpacing: 2,
+        children: recs
+            .map(
+              (rec) => RecommendationBlock(
+                rec["id"],
+                rec["productName"],
+                rec["manufacturerName"],
+                rec["imageUrl"],
+                rec["favorite"] == "1",
+                int.parse(rec["numStores"]),
+              ),
+            )
+            .toList(),
       ),
+      // child: ListView.separated(
+      //   separatorBuilder: (context, index) => SizedBox(height: 2),
+      //   itemCount: recs.length,
+      //   itemBuilder: (context, index) => RecommendationBlock(
+      //     recs[index]["id"],
+      //     recs[index]["productName"],
+      //     recs[index]["manufacturerName"],
+      //     recs[index]["imageUrl"],
+      //     recs[index]["favorite"] == "1",
+      //     int.parse(recs[index]["numStores"]),
+      //   ),
+      // ),
     );
   }
 }
@@ -177,14 +194,10 @@ class _RecommendationBlockState extends State<RecommendationBlock> {
 
   @override
   Widget build(BuildContext context) {
-    String name = productName.length > 50
-        ? productName.substring(0, 50) + "..."
-        : productName;
     return Container(
-        height: 100,
         decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.all(Radius.circular(20))),
+            borderRadius: BorderRadius.all(Radius.circular(5))),
         child: InkWell(
           onTap: () => openProductPreview(context, {
             "productId": productId,
@@ -195,64 +208,52 @@ class _RecommendationBlockState extends State<RecommendationBlock> {
             "numberOfStores": numberOfStores
           }),
           child: Container(
-            padding: EdgeInsets.fromLTRB(15, 5, 15, 5),
-            child: Stack(
+            padding: EdgeInsets.all(5),
+            child: Column(
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 70,
-                        child: imageUrl == null
-                            ? SizedBox()
-                            : Center(child: ImageWithUrl(imageUrl)),
-                      ),
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.fromLTRB(15, 20, 30, 0),
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: Text(
-                              name,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                Expanded(
+                  child: imageUrl == null
+                      ? SizedBox()
+                      : Center(
+                          child: ImageWithUrl(imageUrl),
+                        ),
+                ),
+                Text(
+                  productName,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
+                  maxLines: 2,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Text(
+                          manufacturerName ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 12,
                           ),
                         ),
-                      )
-                    ],
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        manufacturerName ?? "",
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
                       ),
-                    ],
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
+                    ),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Text(
                         "$numberOfStores $numberOfStoresText",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 12,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
