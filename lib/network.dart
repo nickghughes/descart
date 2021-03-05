@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 Future<List<dynamic>> getPurchaseHistory(
-    int userId, String search, bool favorite, int sortIdx) async {
-  debugPrint("$sortIdx");
-  List<dynamic> purchases = await http
-      .get(
-          "http://192.168.1.189:3333/api/descart/purchases/$userId?search=$search&favorite=$favorite&sort=$sortIdx")
-      .then((res) => JsonDecoder().convert(res.body));
+    int pageSize, int page, String search, bool favorite, int sortIdx) async {
+  String token = await FlutterSecureStorage().read(key: "token");
+  List<dynamic> purchases = await http.get(
+      "http://192.168.1.189:3333/api/descart/purchases?page_size=$pageSize&page=$page&search=$search&favorite=$favorite&sort=$sortIdx",
+      headers: {
+        "Authorization": "Bearer $token"
+      }).then((res) => JsonDecoder().convert(res.body));
   return purchases;
 }
 
 Future<List<dynamic>> getRecommendations(
-    int userId, String search, bool favorite) async {
-  return await http
-      .get(
-          "http://192.168.1.189:3333/api/descart/discover/$userId?search=$search&favorite=$favorite")
-      .then((res) => JsonDecoder().convert(res.body));
+    int pageSize, int page, String search, bool favorite) async {
+  String token = await FlutterSecureStorage().read(key: "token");
+  return await http.get(
+      "http://192.168.1.189:3333/api/descart/discover?page_size=$pageSize&page=$page&search=$search&favorite=$favorite",
+      headers: {
+        "Authorization": "Bearer $token"
+      }).then((res) => JsonDecoder().convert(res.body));
 }
 
 Future<List<dynamic>> getPurchaseItems(int purchaseId) async {
@@ -25,7 +29,7 @@ Future<List<dynamic>> getPurchaseItems(int purchaseId) async {
   return items;
 }
 
-Future<List<dynamic>> getProductStores(int productId) {
+Future<List<dynamic>> getProductStores(int productId) async {
   return query("productpreview/$productId").then((stores) {
     return stores;
   });
@@ -45,50 +49,56 @@ Future<List<dynamic>> getStoreSuggestions(String q) async {
   return JsonDecoder().convert(res.body);
 }
 
-Future<void> postPurchase(Map<String, dynamic> purchase) async {
+Future<dynamic> postPurchase(Map<String, dynamic> purchase) async {
+  String token = await FlutterSecureStorage().read(key: "token");
   String body = json.encode(purchase);
-  await http.post(Uri.http('192.168.1.189:3333', 'api/descart/purchase'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: body);
+  dynamic p =
+      await http.post(Uri.http('192.168.1.189:3333', 'api/descart/purchase'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            "Authorization": "Bearer $token"
+          },
+          body: body);
+  return p.body;
 }
 
-Future<void> favoriteProduct(int userId, int productId, bool favorite) async {
-  String body = json.encode({
-    "user_id": userId,
-    "product_id": productId,
-    "favorite": favorite.toString()
-  });
+Future<void> favoriteProduct(int productId, bool favorite) async {
+  String token = await FlutterSecureStorage().read(key: "token");
+  String body =
+      json.encode({"product_id": productId, "favorite": favorite.toString()});
   await http.post(Uri.http('192.168.1.189:3333', 'api/descart/favoriteproduct'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+        "Authorization": "Bearer $token"
       },
       body: body);
 }
 
-Future<void> favoritePurchase(int userId, int purchaseId, bool favorite) async {
-  String body = json.encode({
-    "user_id": userId,
-    "purchase_id": purchaseId,
-    "favorite": favorite.toString()
-  });
+Future<void> favoritePurchase(int purchaseId, bool favorite) async {
+  String token = await FlutterSecureStorage().read(key: "token");
+  String body =
+      json.encode({"purchase_id": purchaseId, "favorite": favorite.toString()});
   await http.post(
       Uri.http('192.168.1.189:3333', 'api/descart/favoritepurchase'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+        "Authorization": "Bearer $token"
       },
       body: body);
 }
 
 Future<void> deletePurchase(int purchaseId) async {
-  await http
-      .delete('http://192.168.1.189:3333/api/descart/purchase/$purchaseId');
+  String token = await FlutterSecureStorage().read(key: "token");
+  await http.delete(
+    'http://192.168.1.189:3333/api/descart/purchase/$purchaseId',
+    headers: {"Authorization": "Bearer $token"},
+  );
 }
 
-Future<dynamic> query(String path, [Map<String, dynamic> params]) {
+Future<dynamic> query(String path, [Map<String, dynamic> params]) async {
+  String token = await FlutterSecureStorage().read(key: "token");
   Uri uri = Uri.http('192.168.1.189:3333', 'api/descart/$path', params);
-  return http.get(uri).then((res) {
+  return http.get(uri, headers: {"Authorization": "Bearer $token"}).then((res) {
     return JsonDecoder().convert(res.body);
   });
 }

@@ -60,6 +60,7 @@ class _NavScaffoldState extends State<NavScaffold> {
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
+        leading: new Container(),
         title: Text(_page == 0 ? "Discover" : "Purchases"),
         actions: [
           Container(
@@ -75,9 +76,11 @@ class _NavScaffoldState extends State<NavScaffold> {
                     onTap: () {
                       signOutGoogle();
                       Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (context) {
-                        return LoginPage();
-                      }), ModalRoute.withName('/'));
+                        MaterialPageRoute(builder: (context) {
+                          return LoginPage();
+                        }),
+                        ModalRoute.withName('/'),
+                      );
                     },
                   ),
                 ],
@@ -96,7 +99,7 @@ class _NavScaffoldState extends State<NavScaffold> {
       ),
       body: PageView(
         children: [
-          Discover(1),
+          Discover(),
           PurchaseHistory(),
         ],
         controller: _pageController,

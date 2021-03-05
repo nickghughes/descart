@@ -104,7 +104,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                                   onTap: () async {
                                     _favorite = !_favorite;
                                     await favoriteProduct(
-                                        1, product["productId"], _favorite);
+                                        product["productId"], _favorite);
                                     onUpdateFavorite(_favorite);
                                     setState(() {});
                                   },
@@ -136,6 +136,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                                 Expanded(flex: 1, child: Container()),
                                 Expanded(flex: 4, child: Bold("Store")),
                                 Expanded(flex: 2, child: Bold("Price")),
+                                Expanded(flex: 2, child: SizedBox()),
                               ],
                             ),
                             SizedBox(height: 20),
@@ -145,38 +146,43 @@ class _ProductPreviewState extends State<ProductPreview> {
                                 separatorBuilder: (context, index) =>
                                     Divider(color: Colors.black),
                                 itemCount: product["stores"].length,
-                                itemBuilder: (context, index) => InkWell(
-                                  onTap: () => _launchURL(
-                                      product["stores"][index]["url"]),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: Container(
-                                          padding:
-                                              EdgeInsets.fromLTRB(0, 0, 5, 0),
-                                          child: product["stores"][index]
-                                                      ["imageUrl"] ==
-                                                  null
-                                              ? SizedBox()
-                                              : ImageWithUrl(product["stores"]
-                                                  [index]["imageUrl"]),
-                                        ),
+                                itemBuilder: (context, index) => Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 1,
+                                      child: Container(
+                                        padding:
+                                            EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                        child: product["stores"][index]
+                                                    ["imageUrl"] ==
+                                                null
+                                            ? SizedBox()
+                                            : ImageWithUrl(product["stores"]
+                                                [index]["imageUrl"]),
                                       ),
-                                      Expanded(
-                                        flex: 4,
-                                        child: Bold.withSize(
-                                            product["stores"][index]
-                                                ["store_name"],
-                                            16),
+                                    ),
+                                    Expanded(
+                                      flex: 4,
+                                      child: Bold.withSize(
+                                          product["stores"][index]
+                                              ["store_name"],
+                                          16),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text("\$ " +
+                                          product["stores"][index]["price"]),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: RaisedButton(
+                                        onPressed: () => _launchURL(
+                                            product["stores"][index]["url"]),
+                                        child: Text("Go"),
+                                        color: Theme.of(context).primaryColor,
                                       ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text("\$ " +
-                                            product["stores"][index]["price"]),
-                                      )
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

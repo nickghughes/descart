@@ -2,33 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:descart/network.dart';
 import 'package:descart/product.dart';
 import 'package:descart/util.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class Discover extends StatefulWidget {
-  final int userId;
-
-  Discover(this.userId);
+  Discover();
 
   @override
-  _DiscoverState createState() => _DiscoverState(userId);
+  _DiscoverState createState() => _DiscoverState();
 }
 
 class _DiscoverState extends State<Discover> {
-  Future<List<dynamic>> __recs;
-  int userId;
+  String _search = "";
+  bool _favorite = false;
 
-  _DiscoverState(this.userId);
-
-  @override
-  void initState() {
-    __recs = getRecommendations(userId, "", false);
-    super.initState();
-  }
+  _DiscoverState();
 
   void updateFilter(String search, bool favorite) {
-    setState(() {
-      __recs = getRecommendations(1, search, favorite);
-    });
+    _search = search;
+    _favorite = favorite;
+    setState(() {});
   }
 
   @override
@@ -39,55 +32,12 @@ class _DiscoverState extends State<Discover> {
         child: Column(
           children: [
             RecsFilter(updateFilter),
-            FutureBuilder(
-              future: __recs,
-              builder: (context, data) {
-                if (data.connectionState != ConnectionState.done) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (data.hasError) {
-                  return SizedBox();
-                }
-                return discover(context, data.data);
-              },
+            Expanded(
+              child: DiscoverBody(_search, _favorite),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget discover(BuildContext context, List<dynamic> recs) {
-    return Expanded(
-      child: GridView.extent(
-        maxCrossAxisExtent: 150,
-        mainAxisSpacing: 2,
-        crossAxisSpacing: 2,
-        children: recs
-            .map(
-              (rec) => RecommendationBlock(
-                rec["id"],
-                rec["productName"],
-                rec["manufacturerName"],
-                rec["imageUrl"],
-                rec["favorite"] == "1",
-                int.parse(rec["numStores"]),
-              ),
-            )
-            .toList(),
-      ),
-      // child: ListView.separated(
-      //   separatorBuilder: (context, index) => SizedBox(height: 2),
-      //   itemCount: recs.length,
-      //   itemBuilder: (context, index) => RecommendationBlock(
-      //     recs[index]["id"],
-      //     recs[index]["productName"],
-      //     recs[index]["manufacturerName"],
-      //     recs[index]["imageUrl"],
-      //     recs[index]["favorite"] == "1",
-      //     int.parse(recs[index]["numStores"]),
-      //   ),
-      // ),
     );
   }
 }
@@ -153,6 +103,104 @@ class _RecsFilterState extends State<RecsFilter> {
                 : Icon(Icons.star_outline),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class DiscoverBody extends StatefulWidget {
+  final String _search;
+  final bool _favorite;
+  DiscoverBody(this._search, this._favorite);
+
+  @override
+  _DiscoverBodyState createState() => _DiscoverBodyState(_search, _favorite);
+}
+
+class _DiscoverBodyState extends State<DiscoverBody> {
+  final int _pageSize = 24;
+  String _search;
+  bool _favorite;
+
+  _DiscoverBodyState(this._search, this._favorite);
+
+  final PagingController<int, dynamic> _pagingController =
+      PagingController(firstPageKey: 0);
+
+  @override
+  void initState() {
+    _pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey);
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(DiscoverBody oldWidget) {
+    if (oldWidget._search != widget._search ||
+        oldWidget._favorite != widget._favorite) {
+      setState(() {
+        _search = widget._search;
+        _favorite = widget._favorite;
+      });
+      _pagingController.refresh();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  Future<void> _fetchPage(int pageKey) async {
+    try {
+      final newItems =
+          await getRecommendations(_pageSize, pageKey, _search, _favorite);
+      final isLastPage = newItems.length < _pageSize;
+      if (isLastPage) {
+        _pagingController.appendLastPage(newItems);
+      } else {
+        final nextPageKey = pageKey + 1;
+        _pagingController.appendPage(newItems, nextPageKey);
+      }
+    } catch (error) {
+      _pagingController.error = error;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () => Future.sync(
+        () => _pagingController.refresh(),
+      ),
+      child: PagedGridView(
+        key: Key(
+            "${_pagingController.itemList?.length ?? 0}${_pagingController.nextPageKey}$_search$_favorite"),
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 150,
+          mainAxisSpacing: 2,
+          crossAxisSpacing: 2,
+        ),
+        pagingController: _pagingController,
+        builderDelegate: PagedChildBuilderDelegate(
+          itemBuilder: (context, rec, index) => RecommendationBlock(
+            rec["id"],
+            rec["productName"],
+            rec["manufacturerName"],
+            rec["imageUrl"],
+            rec["favorite"] != "0",
+            int.parse(rec["numStores"]),
+          ),
+          noItemsFoundIndicatorBuilder: (context) => Center(
+            child: Text(
+              "No products found",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
       ),
     );
   }

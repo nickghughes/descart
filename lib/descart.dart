@@ -3,6 +3,10 @@ import 'package:descart/nav_scaffold.dart';
 import 'package:flutter/material.dart';
 
 class DesCart extends StatelessWidget {
+  final bool loggedIn;
+
+  DesCart(this.loggedIn);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -11,7 +15,7 @@ class DesCart extends StatelessWidget {
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: NavScaffold(), //LoginPage(),
+      home: loggedIn ? NavScaffold() : LoginPage(),
     );
   }
 }

@@ -33,14 +33,20 @@ class _PurchasePreviewState extends State<PurchasePreview> {
     super.initState();
   }
 
-  void openProductPreview(BuildContext context, dynamic product) {
+  void openProductPreview(BuildContext context, int index) {
     showCupertinoModalBottomSheet<void>(
       context: context,
       expand: false,
       isDismissible: true,
       builder: (context) => SingleChildScrollView(
-          controller: ModalScrollController.of(context),
-          child: ProductPreview(product, (bool) {})),
+        controller: ModalScrollController.of(context),
+        child: ProductPreview(
+          _purchase['items'][index],
+          (bool f) {
+            _purchase['items'][index]["favorite"] = f;
+          },
+        ),
+      ),
     );
   }
 
@@ -75,7 +81,10 @@ class _PurchasePreviewState extends State<PurchasePreview> {
         future: _items,
         builder: (context, data) {
           if (data.hasData) {
-            _purchase["items"] = data.data;
+            _purchase["items"] = data.data.map((item) {
+              item["favorite"] = item["favorite"] != "0";
+              return item;
+            }).toList();
             return preview(context, _purchase);
           } else {
             return Center(child: CircularProgressIndicator());
@@ -118,7 +127,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                             debugPrint(_favorite.toString());
                             _favorite = !_favorite;
                             await favoritePurchase(
-                                1, purchase["purchaseId"], _favorite);
+                                purchase["purchaseId"], _favorite);
                             onUpdateFavorite(_favorite);
                             setState(() {});
                           },
@@ -210,11 +219,14 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                     Divider(color: Colors.black),
                                 itemCount: purchase["items"].length,
                                 itemBuilder: (context, index) => InkWell(
-                                  onTap: () => purchase["items"][index]
-                                          .containsKey("productId")
-                                      ? openProductPreview(
-                                          context, purchase["items"][index])
-                                      : debugPrint("cannot open custom item"),
+                                  onTap: () {
+                                    debugPrint(
+                                        purchase["items"][index].toString());
+                                    purchase["items"][index]
+                                            .containsKey("productId")
+                                        ? openProductPreview(context, index)
+                                        : debugPrint("cannot open custom item");
+                                  },
                                   child: Row(
                                     children: [
                                       Expanded(
