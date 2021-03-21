@@ -15,12 +15,14 @@ class Discover extends StatefulWidget {
 class _DiscoverState extends State<Discover> {
   String _search = "";
   bool _favorite = false;
+  String _category = "";
 
   _DiscoverState();
 
-  void updateFilter(String search, bool favorite) {
+  void updateFilter(String search, bool favorite, String category) {
     _search = search;
     _favorite = favorite;
+    _category = category;
     setState(() {});
   }
 
@@ -33,7 +35,7 @@ class _DiscoverState extends State<Discover> {
           children: [
             RecsFilter(updateFilter),
             Expanded(
-              child: DiscoverBody(_search, _favorite),
+              child: DiscoverBody(_search, _favorite, _category),
             ),
           ],
         ),
@@ -43,7 +45,7 @@ class _DiscoverState extends State<Discover> {
 }
 
 class RecsFilter extends StatefulWidget {
-  final Function(String, bool) onUpdate;
+  final Function(String, bool, String) onUpdate;
   RecsFilter(this.onUpdate);
 
   @override
@@ -53,8 +55,9 @@ class RecsFilter extends StatefulWidget {
 class _RecsFilterState extends State<RecsFilter> {
   bool _favorite = false;
   final searchController = TextEditingController();
+  bool _useCategory = false;
 
-  Function(String, bool) onUpdate;
+  Function(String, bool, String) onUpdate;
   _RecsFilterState(this.onUpdate);
 
   @override
@@ -75,7 +78,8 @@ class _RecsFilterState extends State<RecsFilter> {
                   Expanded(
                     child: TextField(
                       controller: searchController,
-                      onChanged: (String query) => onUpdate(query, _favorite),
+                      onChanged: (String query) =>
+                          onUpdate(query, _favorite, "TODO_CATEGORY"),
                       maxLength: 35,
                       maxLines: 1,
                       decoration: InputDecoration(
@@ -94,8 +98,20 @@ class _RecsFilterState extends State<RecsFilter> {
           SizedBox(width: 5),
           InkWell(
             onTap: () {
+              debugPrint("tapped filter");
+              _useCategory = !_useCategory;
+              onUpdate(searchController.text, _favorite, "TODO_CATEGORY");
+              setState(() {});
+            },
+            child: _useCategory
+                ? Icon(Icons.filter_alt, color: Colors.orange)
+                : Icon(Icons.filter_alt_outlined),
+          ),
+          SizedBox(width: 5),
+          InkWell(
+            onTap: () {
               _favorite = !_favorite;
-              onUpdate(searchController.text, _favorite);
+              onUpdate(searchController.text, _favorite, "TODO_CATEGORY");
               setState(() {});
             },
             child: _favorite
@@ -111,18 +127,21 @@ class _RecsFilterState extends State<RecsFilter> {
 class DiscoverBody extends StatefulWidget {
   final String _search;
   final bool _favorite;
-  DiscoverBody(this._search, this._favorite);
+  final String _category;
+  DiscoverBody(this._search, this._favorite, this._category);
 
   @override
-  _DiscoverBodyState createState() => _DiscoverBodyState(_search, _favorite);
+  _DiscoverBodyState createState() =>
+      _DiscoverBodyState(_search, _favorite, _category);
 }
 
 class _DiscoverBodyState extends State<DiscoverBody> {
   final int _pageSize = 24;
   String _search;
   bool _favorite;
+  String _category;
 
-  _DiscoverBodyState(this._search, this._favorite);
+  _DiscoverBodyState(this._search, this._favorite, this._category);
 
   final PagingController<int, dynamic> _pagingController =
       PagingController(firstPageKey: 0);
