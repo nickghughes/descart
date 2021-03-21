@@ -129,115 +129,9 @@ class _PurchaseProductFormState extends State<PurchaseProductForm> {
                   },
                   onSuggestionSelected: (suggestion) {
                     Navigator.of(context).pop();
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return ProductInfoForm(suggestion, callback);
-                        });
+                    callback(suggestion);
                   },
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class ProductInfoForm extends StatefulWidget {
-  final Map<String, dynamic> suggestion;
-  final void Function(Map<String, dynamic>) callback;
-  ProductInfoForm(this.suggestion, this.callback);
-  @override
-  _ProductInfoFormState createState() =>
-      _ProductInfoFormState(this.suggestion, this.callback);
-}
-
-class _ProductInfoFormState extends State<ProductInfoForm> {
-  final Map<String, dynamic> suggestion;
-  final void Function(Map<String, dynamic>) callback;
-  _ProductInfoFormState(this.suggestion, this.callback);
-
-  final priceController = MoneyMaskedTextController(
-      decimalSeparator: '.', thousandSeparator: '', leftSymbol: '\$');
-  final quantityController = TextEditingController();
-
-  @override
-  void dispose() {
-    super.dispose();
-    priceController.dispose();
-    quantityController.dispose();
-  }
-
-  void useCallback(BuildContext context) {
-    int quantity = int.parse(quantityController.text);
-    String price =
-        priceController.text.substring(1, priceController.text.length);
-    Map<String, dynamic> item = {"quantity": quantity, "price": price};
-    item.addAll(suggestion);
-    callback(item);
-    Navigator.of(context).pop();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      type: MaterialType.transparency,
-      child: Center(
-        child: Container(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-          child: Container(
-            padding: EdgeInsets.fromLTRB(30, 20, 30, 20),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(20))),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Bold.withSize("Please enter more information for item:", 16),
-                Text(suggestion['name']),
-                Row(
-                  children: [
-                    Expanded(
-                        child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Bold("Quantity")),
-                        flex: 2),
-                    SizedBox(width: 20),
-                    Expanded(
-                      child: TextField(
-                        controller: quantityController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                      ),
-                      flex: 1,
-                    ),
-                    Expanded(
-                        child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Bold("Price")),
-                        flex: 2),
-                    SizedBox(width: 20),
-                    Expanded(
-                        child: TextField(controller: priceController), flex: 3),
-                    Expanded(child: SizedBox(), flex: 1),
-                  ],
-                ),
-                SizedBox(height: 30),
-                GestureDetector(
-                  onTap: () {
-                    quantityController.text.length > 0
-                        ? useCallback(context)
-                        : debugPrint("not ready");
-                  },
-                  child: Text(
-                    "Done",
-                    style: TextStyle(color: Theme.of(context).primaryColor),
-                  ),
-                )
               ],
             ),
           ),
@@ -282,12 +176,12 @@ class _PurchaseFormState extends State<PurchaseForm> {
               ? {
                   "id": item["id"],
                   "price": item["price"],
-                  "quantity": item["quantity"]
+                  "quantity": int.parse(item["quantity"])
                 }
               : {
                   "name": item["name"],
                   "price": item["price"],
-                  "quantity": item["quantity"]
+                  "quantity": int.parse(item["quantity"])
                 })
           .toList()
     };
@@ -300,7 +194,9 @@ class _PurchaseFormState extends State<PurchaseForm> {
   Widget build(BuildContext context) {
     String subtotal = items.length > 0
         ? items
-            .map((el) => double.parse(el["price"]) * el["quantity"])
+            .map((el) =>
+                double.parse(el["price"] ?? "0.00") *
+                double.parse(el["quantity"] ?? "0.00"))
             .reduce((curr, next) => curr + next)
             .toStringAsFixed(2)
         : "0.00";
@@ -394,56 +290,26 @@ class _PurchaseFormState extends State<PurchaseForm> {
                                         items.length
                                     ? InkWell(
                                         onTap: () => debugPrint("clicked item"),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 1,
-                                              child: Text(items[index]
-                                                      ["quantity"]
-                                                  .toString()),
-                                            ),
-                                            Expanded(
-                                              flex: 1,
-                                              child: Container(
-                                                padding: EdgeInsets.fromLTRB(
-                                                    0, 0, 5, 0),
-                                                child: items[index]
-                                                            ["imageUrl"] ==
-                                                        null
-                                                    ? SizedBox()
-                                                    : ImageWithUrl(items[index]
-                                                        ["imageUrl"]),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 3,
-                                              child: Text(items[index]["name"]),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child:
-                                                  Text(items[index]["price"]),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text((double.parse(
-                                                          items[index]
-                                                              ["price"]) *
-                                                      items[index]["quantity"])
-                                                  .toStringAsFixed(2)),
-                                            ),
-                                            Expanded(
-                                              flex: 1,
-                                              child: _addRemoveButton(index),
-                                            ),
-                                          ],
+                                        child: ItemForm(
+                                          items[index],
+                                          (quantity) {
+                                            items[index]["quantity"] = quantity;
+                                            setState(() {});
+                                          },
+                                          (price) {
+                                            items[index]["price"] = price;
+                                            setState(() {});
+                                          },
+                                          () {
+                                            items.removeAt(index);
+                                            setState(() {});
+                                          },
                                         ),
                                       )
                                     : Align(
                                         alignment: Alignment.topCenter,
                                         child: GestureDetector(
                                           onTap: () => {
-                                            //items.add({})
                                             showDialog(
                                               context: context,
                                               builder: (context) {
@@ -527,14 +393,20 @@ class _PurchaseFormState extends State<PurchaseForm> {
                             SizedBox(height: 100),
                             GestureDetector(
                               onTap: () {
-                                items.length > 0
+                                items.length > 0 &&
+                                        items.every((item) =>
+                                            item.containsKey("quantity") &&
+                                            item["quantity"] != "0")
                                     ? savePurchase(context)
                                     : debugPrint("do nothing");
                               },
                               child: Text(
                                 "Save Purchase",
                                 style: TextStyle(
-                                    color: items.length > 0
+                                    color: items.length > 0 &&
+                                            items.every((item) =>
+                                                item.containsKey("quantity") &&
+                                                item["quantity"] != "0")
                                         ? Theme.of(context).primaryColor
                                         : Colors.grey),
                               ),
@@ -552,51 +424,44 @@ class _PurchaseFormState extends State<PurchaseForm> {
       ),
     );
   }
-
-  Widget _addRemoveButton(int index) {
-    return InkWell(
-      onTap: () {
-        items.removeAt(index);
-        setState(() {});
-      },
-      child: Align(
-        alignment: Alignment.center,
-        child: Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(
-            Icons.remove,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class ItemForm extends StatefulWidget {
   final Map<String, dynamic> item;
+  final Function(String) onQuantityUpdate;
+  final Function(String) onPriceUpdate;
   final Function onDelete;
 
-  ItemForm(this.item, this.onDelete);
+  ItemForm(this.item, this.onQuantityUpdate, this.onPriceUpdate, this.onDelete);
 
-  _ItemFormState createState() => _ItemFormState(item, onDelete);
+  _ItemFormState createState() =>
+      _ItemFormState(item, onQuantityUpdate, onPriceUpdate, onDelete);
 }
 
 class _ItemFormState extends State<ItemForm> {
   Map<String, dynamic> item;
+  Function(String) onQuantityUpdate;
+  Function(String) onPriceUpdate;
   Function onDelete;
 
-  _ItemFormState(this.item, this.onDelete);
+  _ItemFormState(
+      this.item, this.onQuantityUpdate, this.onPriceUpdate, this.onDelete);
 
   final priceController = MoneyMaskedTextController(
-      decimalSeparator: '.', thousandSeparator: '', leftSymbol: '\$');
+      decimalSeparator: '.',
+      thousandSeparator: '',
+      leftSymbol: '\$',
+      precision: 2);
   final quantityController = TextEditingController();
 
+  @override
+  void dispose() {
+    super.dispose();
+    priceController.dispose();
+    quantityController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Row(
       children: [
@@ -604,6 +469,9 @@ class _ItemFormState extends State<ItemForm> {
           flex: 1,
           child: TextField(
             controller: quantityController,
+            onChanged: (text) {
+              onQuantityUpdate(text.length > 0 ? text : "0");
+            },
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
@@ -620,14 +488,22 @@ class _ItemFormState extends State<ItemForm> {
         ),
         Expanded(
           flex: 2,
-          child: TextField(controller: priceController),
+          child: TextField(
+            controller: priceController,
+            onChanged: (text) {
+              onPriceUpdate(priceController.text
+                  .substring(1, priceController.text.length));
+            },
+          ),
         ),
         Expanded(
           flex: 2,
           child: Text(
-            (double.parse(item["price"]) * item["quantity"]).toStringAsFixed(2),
+            (double.parse(item["price"] ?? "0") *
+                    double.parse(item["quantity"] ?? "0"))
+                .toStringAsFixed(2),
           ),
-        ), //total
+        ),
         Expanded(
           flex: 1,
           child: InkWell(
