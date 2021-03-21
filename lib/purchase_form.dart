@@ -443,6 +443,7 @@ class _PurchaseFormState extends State<PurchaseForm> {
                                         alignment: Alignment.topCenter,
                                         child: GestureDetector(
                                           onTap: () => {
+                                            //items.add({})
                                             showDialog(
                                               context: context,
                                               builder: (context) {
@@ -573,6 +574,82 @@ class _PurchaseFormState extends State<PurchaseForm> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ItemForm extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final Function onDelete;
+
+  ItemForm(this.item, this.onDelete);
+
+  _ItemFormState createState() => _ItemFormState(item, onDelete);
+}
+
+class _ItemFormState extends State<ItemForm> {
+  Map<String, dynamic> item;
+  Function onDelete;
+
+  _ItemFormState(this.item, this.onDelete);
+
+  final priceController = MoneyMaskedTextController(
+      decimalSeparator: '.', thousandSeparator: '', leftSymbol: '\$');
+  final quantityController = TextEditingController();
+
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: TextField(
+            controller: quantityController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: item["imageUrl"] == null
+              ? SizedBox()
+              : ImageWithUrl(item["imageUrl"]),
+        ),
+        Expanded(
+          flex: 3,
+          child: Text(item["name"]),
+        ),
+        Expanded(
+          flex: 2,
+          child: TextField(controller: priceController),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            (double.parse(item["price"]) * item["quantity"]).toStringAsFixed(2),
+          ),
+        ), //total
+        Expanded(
+          flex: 1,
+          child: InkWell(
+            onTap: () => onDelete(),
+            child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.remove,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

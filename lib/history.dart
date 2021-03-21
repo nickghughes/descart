@@ -14,7 +14,7 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
   bool _favorite = false;
   int _sortIdx = 0;
 
-  void updateFilter(String search, bool favorite, int sortIdx) async {
+  void updateFilter(String search, bool favorite, int sortIdx) {
     _search = search;
     _favorite = favorite;
     _sortIdx = sortIdx;

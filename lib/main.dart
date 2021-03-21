@@ -18,7 +18,7 @@ void main() async {
 Future<bool> isValidToken(String token) async {
   if (token == null) return false;
   return await http
-      .get("http://192.168.1.189:3333/api/auth/profile",
+      .get("http://descart.grumdog.com/api/auth/profile",
           headers: {"Authorization": "Bearer $token"})
       .then((res) => true)
       .catchError((err) => false);

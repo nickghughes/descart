@@ -61,8 +61,8 @@ class _PurchasePreviewState extends State<PurchasePreview> {
             FlatButton(
               child: Text("Delete"),
               onPressed: () {
-                Navigator.of(context).pop();
                 onDelete();
+                Navigator.of(context).pop();
               },
             ),
             FlatButton(
@@ -249,8 +249,12 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                       ),
                                       Expanded(
                                         flex: 4,
-                                        child: Text(purchase["items"][index]
-                                            ["productName"]),
+                                        child: Text(
+                                          purchase["items"][index]
+                                              ["productName"],
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                       Expanded(
                                         flex: 2,
@@ -264,7 +268,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                                         ["price"]) *
                                                 purchase["items"][index]
                                                     ["quantity"])
-                                            .toString()),
+                                            .toStringAsFixed(2)),
                                       ),
                                     ],
                                   ),
