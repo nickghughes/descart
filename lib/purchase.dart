@@ -5,19 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class PurchasePreview extends StatefulWidget {
-  Map<String, dynamic> purchase;
+  final Map<String, dynamic> purchase;
+  final Function(bool) onUpdateFavorite;
+  final Function onDelete;
 
-  PurchasePreview(this.purchase);
+  PurchasePreview(this.purchase, this.onUpdateFavorite, this.onDelete);
 
   @override
-  _PurchasePreviewState createState() => _PurchasePreviewState(purchase);
+  _PurchasePreviewState createState() =>
+      _PurchasePreviewState(purchase, onUpdateFavorite, onDelete);
 }
 
 class _PurchasePreviewState extends State<PurchasePreview> {
   Map<String, dynamic> _purchase;
   Future<List<dynamic>> _items;
+  Function(bool) onUpdateFavorite;
+  final Function onDelete;
 
-  _PurchasePreviewState(this._purchase);
+  bool _favorite;
+
+  _PurchasePreviewState(this._purchase, this.onUpdateFavorite, this.onDelete)
+      : this._favorite = _purchase["favorite"];
 
   @override
   void initState() {
@@ -25,14 +33,45 @@ class _PurchasePreviewState extends State<PurchasePreview> {
     super.initState();
   }
 
-  void openProductPreview(BuildContext context, dynamic product) {
+  void openProductPreview(BuildContext context, int index) {
     showCupertinoModalBottomSheet<void>(
       context: context,
       expand: false,
       isDismissible: true,
       builder: (context) => SingleChildScrollView(
-          controller: ModalScrollController.of(context),
-          child: ProductPreview(product)),
+        controller: ModalScrollController.of(context),
+        child: ProductPreview(
+          _purchase['items'][index],
+          (bool f) {
+            _purchase['items'][index]["favorite"] = f;
+          },
+        ),
+      ),
+    );
+  }
+
+  void areYouSureDelete(BuildContext context, Function onDelete) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Delete Purchase"),
+          content: Text("Are you sure you want to delete this purchase?"),
+          actions: [
+            FlatButton(
+              child: Text("Delete"),
+              onPressed: () {
+                onDelete();
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -42,7 +81,10 @@ class _PurchasePreviewState extends State<PurchasePreview> {
         future: _items,
         builder: (context, data) {
           if (data.hasData) {
-            _purchase["items"] = data.data;
+            _purchase["items"] = data.data.map((item) {
+              item["favorite"] = item["favorite"] != "0";
+              return item;
+            }).toList();
             return preview(context, _purchase);
           } else {
             return Center(child: CircularProgressIndicator());
@@ -75,9 +117,33 @@ class _PurchasePreviewState extends State<PurchasePreview> {
               children: [
                 Align(
                   alignment: Alignment.topRight,
-                  child: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Icon(Icons.close),
+                  child: Row(
+                    children: [
+                      Expanded(flex: 8, child: SizedBox()),
+                      Expanded(
+                        flex: 1,
+                        child: InkWell(
+                          onTap: () async {
+                            debugPrint(_favorite.toString());
+                            _favorite = !_favorite;
+                            await favoritePurchase(
+                                purchase["purchaseId"], _favorite);
+                            onUpdateFavorite(_favorite);
+                            setState(() {});
+                          },
+                          child: _favorite
+                              ? Icon(Icons.star, color: Colors.yellow)
+                              : Icon(Icons.star_outline),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Icon(Icons.close),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Column(
@@ -88,7 +154,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                           width: 100,
                           child: purchase["imageUrl"] == null
                               ? Icon(Icons.shopping_bag)
-                              : Image.network(purchase["imageUrl"]),
+                              : ImageWithUrl(purchase["imageUrl"]),
                         ),
                         Expanded(
                           child: Container(
@@ -153,11 +219,14 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                     Divider(color: Colors.black),
                                 itemCount: purchase["items"].length,
                                 itemBuilder: (context, index) => InkWell(
-                                  onTap: () => purchase["items"][index]
-                                          .containsKey("productId")
-                                      ? openProductPreview(
-                                          context, purchase["items"][index])
-                                      : debugPrint("cannot open custom item"),
+                                  onTap: () {
+                                    debugPrint(
+                                        purchase["items"][index].toString());
+                                    purchase["items"][index]
+                                            .containsKey("productId")
+                                        ? openProductPreview(context, index)
+                                        : debugPrint("cannot open custom item");
+                                  },
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -175,14 +244,17 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                                         ["imageUrl"] ==
                                                     null
                                                 ? SizedBox()
-                                                : Image.network(
-                                                    purchase["items"][index]
-                                                        ["imageUrl"])),
+                                                : ImageWithUrl(purchase["items"]
+                                                    [index]["imageUrl"])),
                                       ),
                                       Expanded(
                                         flex: 4,
-                                        child: Text(purchase["items"][index]
-                                            ["productName"]),
+                                        child: Text(
+                                          purchase["items"][index]
+                                              ["productName"],
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                       Expanded(
                                         flex: 2,
@@ -196,7 +268,7 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                                         ["price"]) *
                                                 purchase["items"][index]
                                                     ["quantity"])
-                                            .toString()),
+                                            .toStringAsFixed(2)),
                                       ),
                                     ],
                                   ),
@@ -254,7 +326,14 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                             ),
                             SizedBox(height: 100),
                             GestureDetector(
-                              onTap: () => debugPrint("delete purchase"),
+                              onTap: () => areYouSureDelete(
+                                context,
+                                () async {
+                                  await deletePurchase(purchase["purchaseId"]);
+                                  onDelete();
+                                  Navigator.of(context).pop();
+                                },
+                              ),
                               child: Text(
                                 "Delete Purchase",
                                 style: TextStyle(color: Colors.red),

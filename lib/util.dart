@@ -16,3 +16,17 @@ class Bold extends StatelessWidget {
     );
   }
 }
+
+class ImageWithUrl extends StatelessWidget {
+  final String url;
+
+  ImageWithUrl(this.url);
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      url,
+      errorBuilder: (context, exception, stackTrace) => Icon(Icons.error),
+    );
+  }
+}

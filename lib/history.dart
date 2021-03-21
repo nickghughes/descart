@@ -1,6 +1,8 @@
 import 'package:descart/network.dart';
 import 'package:descart/purchase.dart';
+import 'package:descart/util.dart';
 import 'package:flutter/material.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class PurchaseHistory extends StatefulWidget {
   @override
@@ -8,12 +10,15 @@ class PurchaseHistory extends StatefulWidget {
 }
 
 class _PurchaseHistoryState extends State<PurchaseHistory> {
-  Future<List<dynamic>> _purchases;
+  String _search = "";
+  bool _favorite = false;
+  int _sortIdx = 0;
 
-  @override
-  void initState() {
-    _purchases = getPurchaseHistory(1);
-    super.initState();
+  void updateFilter(String search, bool favorite, int sortIdx) {
+    _search = search;
+    _favorite = favorite;
+    _sortIdx = sortIdx;
+    setState(() {});
   }
 
   @override
@@ -23,18 +28,12 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
         color: Colors.green[100],
         child: Column(
           children: [
-            PurchaseFilter(),
-            FutureBuilder(
-              future: _purchases,
-              builder: (context, data) {
-                if (data.hasData) {
-                  return PurchaseHistoryBody(data.data);
-                } else {
-                  debugPrint("printing data");
-                  debugPrint(data.toString());
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
+            PurchaseFilter(
+              (String search, bool favorite, int sortIdx) =>
+                  updateFilter(search, favorite, sortIdx),
+            ),
+            Expanded(
+              child: PurchaseHistoryBody(_search, _favorite, _sortIdx),
             ),
           ],
         ),
@@ -43,46 +42,28 @@ class _PurchaseHistoryState extends State<PurchaseHistory> {
   }
 }
 
-class PurchaseHistoryBody extends StatefulWidget {
-  List<dynamic> purchases;
-  PurchaseHistoryBody(this.purchases);
-
-  @override
-  _PurchaseHistoryBodyState createState() =>
-      _PurchaseHistoryBodyState(purchases);
-}
-
-class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
-  List<dynamic> purchases;
-
-  _PurchaseHistoryBodyState(this.purchases);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: ListView.separated(
-        separatorBuilder: (context, index) => SizedBox(height: 2),
-        itemCount: purchases.length,
-        itemBuilder: (context, index) => PurchaseHistoryBlock(
-          purchases[index]["purchase_id"],
-          purchases[index]["storeName"],
-          purchases[index]["purchaseDate"],
-          purchases[index]["imageUrl"],
-          purchases[index]["price"],
-          purchases[index]["items"],
-        ),
-      ),
-    );
-  }
-}
-
 class PurchaseFilter extends StatefulWidget {
+  final Function(String, bool, int) onUpdate;
+  PurchaseFilter(this.onUpdate);
+
   @override
-  _PurchaseFilterState createState() => _PurchaseFilterState();
+  _PurchaseFilterState createState() => _PurchaseFilterState(onUpdate);
 }
 
 class _PurchaseFilterState extends State<PurchaseFilter> {
-  String _query = "";
+  bool _favorite = false;
+  int _sortIdx = 0;
+  final searchController = TextEditingController();
+
+  static const List<String> sortOptions = [
+    "Date ↓",
+    "Date ↑",
+    "Price ↓",
+    "Price ↑"
+  ];
+
+  Function(String, bool, int) onUpdate;
+  _PurchaseFilterState(this.onUpdate);
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +82,9 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: searchController,
+                      onChanged: (String query) =>
+                          onUpdate(query, _favorite, _sortIdx),
                       maxLength: 35,
                       maxLines: 1,
                       decoration: InputDecoration(
@@ -116,27 +100,186 @@ class _PurchaseFilterState extends State<PurchaseFilter> {
               ),
             ),
           ),
-          SizedBox(width: 5),
-          Icon(Icons.star_border),
-          SizedBox(width: 5),
-          Icon(Icons.sort)
+          SizedBox(width: 10),
+          InkWell(
+            onTap: () {
+              _favorite = !_favorite;
+              onUpdate(searchController.text, _favorite, _sortIdx);
+              setState(() {});
+            },
+            child: _favorite
+                ? Icon(Icons.star, color: Colors.yellow)
+                : Icon(Icons.star_outline),
+          ),
+          SizedBox(width: 10),
+          Container(
+            width: 48,
+            child: DropdownButton(
+                selectedItemBuilder: (BuildContext context) =>
+                    List(sortOptions.length)
+                        .map((dynamic) => Icon(Icons.sort))
+                        .toList(),
+                value: _sortIdx,
+                items: sortOptions
+                    .asMap()
+                    .map(
+                      (i, opt) => MapEntry(
+                        i,
+                        DropdownMenuItem(
+                            child: Text(opt, style: TextStyle(fontSize: 14)),
+                            value: i),
+                      ),
+                    )
+                    .values
+                    .toList(),
+                onChanged: (value) {
+                  _sortIdx = value;
+                  onUpdate(searchController.text, _favorite, _sortIdx);
+                  setState(() {});
+                }),
+          ),
         ],
       ),
     );
   }
 }
 
-class PurchaseHistoryBlock extends StatelessWidget {
+class PurchaseHistoryBody extends StatefulWidget {
+  final String _search;
+  final bool _favorite;
+  final int _sortIdx;
+  PurchaseHistoryBody(this._search, this._favorite, this._sortIdx);
+
+  @override
+  _PurchaseHistoryBodyState createState() =>
+      _PurchaseHistoryBodyState(_search, _favorite, _sortIdx);
+}
+
+class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
+  final int _pageSize = 10;
+  String _search;
+  bool _favorite;
+  int _sortIdx;
+
+  _PurchaseHistoryBodyState(this._search, this._favorite, this._sortIdx);
+
+  final PagingController<int, dynamic> _pagingController =
+      PagingController(firstPageKey: 0);
+
+  @override
+  void initState() {
+    _pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey);
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(PurchaseHistoryBody oldWidget) {
+    if (oldWidget._search != widget._search ||
+        oldWidget._favorite != widget._favorite ||
+        oldWidget._sortIdx != widget._sortIdx) {
+      setState(() {
+        _search = widget._search;
+        _favorite = widget._favorite;
+        _sortIdx = widget._sortIdx;
+      });
+      _pagingController.refresh();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  Future<void> _fetchPage(int pageKey) async {
+    try {
+      final newItems = await getPurchaseHistory(
+          _pageSize, pageKey, _search, _favorite, _sortIdx);
+      final isLastPage = newItems.length < _pageSize;
+      if (isLastPage) {
+        _pagingController.appendLastPage(newItems);
+      } else {
+        final nextPageKey = pageKey + 1;
+        _pagingController.appendPage(newItems, nextPageKey);
+      }
+    } catch (error) {
+      _pagingController.error = error;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () => Future.sync(
+        () => _pagingController.refresh(),
+      ),
+      child: PagedListView.separated(
+        key: Key(
+            "${_pagingController.itemList?.length ?? 0}${_pagingController.nextPageKey}$_search$_favorite$_sortIdx"),
+        pagingController: _pagingController,
+        separatorBuilder: (context, index) => SizedBox(height: 2),
+        builderDelegate: PagedChildBuilderDelegate(
+          itemBuilder: (context, item, index) => PurchaseHistoryBlock(
+            item["purchase_id"],
+            item["storeName"],
+            item["purchaseDate"],
+            item["imageUrl"],
+            item["price"],
+            item["favorite"] == "1",
+            item["items"],
+            () {
+              _pagingController.itemList.removeAt(index);
+              setState(() {});
+            },
+          ),
+          noItemsFoundIndicatorBuilder: (context) => Center(
+            child: Text(
+              "No purchases found",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class PurchaseHistoryBlock extends StatefulWidget {
   final int purchaseId;
   final String storeName;
   final String date;
   final String imageUrl;
   final String price;
+  final bool favorite;
+  final int items;
+  final Function onDelete;
+
+  PurchaseHistoryBlock(this.purchaseId, this.storeName, this.date,
+      this.imageUrl, this.price, this.favorite, this.items, this.onDelete);
+
+  @override
+  _PurchaseHistoryBlockState createState() => _PurchaseHistoryBlockState(
+      purchaseId, storeName, date, imageUrl, price, favorite, items, onDelete);
+}
+
+class _PurchaseHistoryBlockState extends State<PurchaseHistoryBlock> {
+  final int purchaseId;
+  final String storeName;
+  final String date;
+  final String imageUrl;
+  final String price;
+  bool favorite;
   final int items;
   final String itemsText;
 
-  PurchaseHistoryBlock(this.purchaseId, this.storeName, this.date,
-      this.imageUrl, this.price, this.items)
+  final Function onDelete;
+
+  _PurchaseHistoryBlockState(this.purchaseId, this.storeName, this.date,
+      this.imageUrl, this.price, this.favorite, this.items, this.onDelete)
       : this.itemsText = items == 1 ? "item" : "items";
 
   @override
@@ -153,6 +296,7 @@ class PurchaseHistoryBlock extends StatelessWidget {
           "purchaseDate": date,
           "imageUrl": imageUrl,
           "price": price,
+          "favorite": favorite,
           "numItems": items
         }),
         child: Container(
@@ -166,9 +310,10 @@ class PurchaseHistoryBlock extends StatelessWidget {
                     Container(
                       width: 70,
                       child: Center(
-                          child: imageUrl == null
-                              ? Icon(Icons.shopping_bag)
-                              : Image.network(imageUrl)),
+                        child: imageUrl == null
+                            ? Icon(Icons.shopping_bag)
+                            : ImageWithUrl(imageUrl),
+                      ),
                     ),
                     Container(
                       padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
@@ -236,8 +381,10 @@ class PurchaseHistoryBlock extends StatelessWidget {
     showDialog(
         context: context,
         builder: (context) {
-          debugPrint(purchase.toString());
-          return PurchasePreview(purchase);
+          return PurchasePreview(purchase, (bool _favorite) {
+            this.favorite = _favorite;
+            setState(() {});
+          }, onDelete);
         });
   }
 }
