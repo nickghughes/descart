@@ -324,20 +324,24 @@ class _PurchaseFormState extends State<PurchaseForm> {
                                         items.length
                                     ? InkWell(
                                         onTap: () => debugPrint("clicked item"),
-                                        child: ItemForm(
-                                          items[index],
-                                          (quantity) {
-                                            items[index]["quantity"] = quantity;
-                                            setState(() {});
-                                          },
-                                          (price) {
-                                            items[index]["price"] = price;
-                                            setState(() {});
-                                          },
-                                          () {
-                                            items.removeAt(index);
-                                            setState(() {});
-                                          },
+                                        child: Container(
+                                          height: 80,
+                                          child: ItemForm(
+                                            items[index],
+                                            (quantity) {
+                                              items[index]["quantity"] =
+                                                  quantity;
+                                              setState(() {});
+                                            },
+                                            (price) {
+                                              items[index]["price"] = price;
+                                              setState(() {});
+                                            },
+                                            () {
+                                              items.removeAt(index);
+                                              setState(() {});
+                                            },
+                                          ),
                                         ),
                                       )
                                     : Align(
@@ -518,7 +522,7 @@ class _ItemFormState extends State<ItemForm> {
         ),
         Expanded(
           flex: 3,
-          child: Text(item["name"]),
+          child: SingleChildScrollView(child: Text(item["name"])),
         ),
         Expanded(
           flex: 2,
@@ -528,6 +532,8 @@ class _ItemFormState extends State<ItemForm> {
               onPriceUpdate(priceController.text
                   .substring(1, priceController.text.length));
             },
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
         ),
         Expanded(

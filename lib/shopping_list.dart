@@ -101,7 +101,8 @@ class _ShoppingListBlockState extends State<ShoppingListBlock> {
     showDialog(
         context: context,
         builder: (context) {
-          return PurchaseForm.fromShoppingList(store, (clear) {
+          return PurchaseForm.fromShoppingList(Map<String, dynamic>.from(store),
+              (clear) {
             if (clear) onClear();
           });
         });
