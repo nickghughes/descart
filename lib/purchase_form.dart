@@ -8,7 +8,7 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 
 class PurchaseStoreForm extends StatefulWidget {
-  final Function() onSave;
+  final Function(bool) onSave;
 
   PurchaseStoreForm(this.onSave);
 
@@ -17,7 +17,7 @@ class PurchaseStoreForm extends StatefulWidget {
 }
 
 class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
-  final Function() onSave;
+  final Function(bool) onSave;
 
   _PurchaseStoreFormState(this.onSave);
 
@@ -143,17 +143,24 @@ class _PurchaseProductFormState extends State<PurchaseProductForm> {
 
 class PurchaseForm extends StatefulWidget {
   final Map<String, dynamic> store;
-  final Function() onSave;
-  PurchaseForm(this.store, this.onSave);
+  final Function(bool) onSave;
+  final bool fromShoppingList;
+  PurchaseForm(this.store, this.onSave) : this.fromShoppingList = false;
+  PurchaseForm.fromShoppingList(this.store, this.onSave)
+      : this.fromShoppingList = true;
 
   @override
-  _PurchaseFormState createState() => _PurchaseFormState(store, onSave);
+  _PurchaseFormState createState() =>
+      _PurchaseFormState(store, onSave, fromShoppingList);
 }
 
 class _PurchaseFormState extends State<PurchaseForm> {
   final Map<String, dynamic> store;
-  final Function() onSave;
-  _PurchaseFormState(this.store, this.onSave);
+  final Function(bool) onSave;
+  final bool fromShoppingList;
+  List<dynamic> items;
+  _PurchaseFormState(this.store, this.onSave, this.fromShoppingList)
+      : items = store["items"] as List<dynamic> ?? [];
   final _scrollController = ScrollController();
 
   @override
@@ -162,15 +169,41 @@ class _PurchaseFormState extends State<PurchaseForm> {
     _scrollController.dispose();
   }
 
-  List<Map<String, dynamic>> items = [];
   final priceController = MoneyMaskedTextController(
       decimalSeparator: '.', thousandSeparator: '', leftSymbol: '\$');
 
   void savePurchase(BuildContext context) async {
+    bool clearCart = false;
+    if (fromShoppingList) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Clear ${store["name"]} Shopping List"),
+            content: Text(
+                "Do you want to clear your ${store["name"]} shopping list?"),
+            actions: [
+              TextButton(
+                child: Text("Yes"),
+                onPressed: () {
+                  clearCart = true;
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text("No"),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          );
+        },
+      );
+    }
     Map<String, dynamic> purchase = {
       "user_id": 1,
       "store_id": store['id'],
       "price": priceController.text.substring(1, priceController.text.length),
+      "clear_cart": clearCart,
       "products": items
           .map((item) => item.containsKey("id")
               ? {
@@ -187,7 +220,7 @@ class _PurchaseFormState extends State<PurchaseForm> {
     };
     await postPurchase(purchase);
     Navigator.of(context).pop();
-    onSave();
+    onSave(clearCart);
   }
 
   @override
@@ -282,6 +315,7 @@ class _PurchaseFormState extends State<PurchaseForm> {
                             SizedBox(height: 30),
                             Expanded(
                               child: ListView.separated(
+                                key: Key("${items.length}"),
                                 controller: _scrollController,
                                 separatorBuilder: (context, index) =>
                                     Divider(color: Colors.black),

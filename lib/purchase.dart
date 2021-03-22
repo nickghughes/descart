@@ -40,12 +40,9 @@ class _PurchasePreviewState extends State<PurchasePreview> {
       isDismissible: true,
       builder: (context) => SingleChildScrollView(
         controller: ModalScrollController.of(context),
-        child: ProductPreview(
-          _purchase['items'][index],
-          (bool f) {
-            _purchase['items'][index]["favorite"] = f;
-          },
-        ),
+        child: ProductPreview(_purchase['items'][index], (bool f) {
+          _purchase['items'][index]["favorite"] = f;
+        }, (b) {}),
       ),
     );
   }
@@ -58,14 +55,14 @@ class _PurchasePreviewState extends State<PurchasePreview> {
           title: Text("Delete Purchase"),
           content: Text("Are you sure you want to delete this purchase?"),
           actions: [
-            FlatButton(
+            TextButton(
               child: Text("Delete"),
               onPressed: () {
                 onDelete();
                 Navigator.of(context).pop();
               },
             ),
-            FlatButton(
+            TextButton(
               child: Text("Cancel"),
               onPressed: () => Navigator.of(context).pop(),
             ),
