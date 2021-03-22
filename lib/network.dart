@@ -88,6 +88,27 @@ Future<void> favoritePurchase(int purchaseId, bool favorite) async {
       body: body);
 }
 
+Future<void> addRemoveShoppingCart(int spId, bool added) async {
+  String token = await FlutterSecureStorage().read(key: "token");
+  String body =
+      json.encode({"storeproduct_id": spId, "add_item": added.toString()});
+  await http.post(Uri.http('descart.grumdog.com', 'api/descart/shoppingcart'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        "Authorization": "Bearer $token"
+      },
+      body: body);
+}
+
+Future<List<dynamic>> getShoppingList() async {
+  String token = await FlutterSecureStorage().read(key: "token");
+  List<dynamic> stores = await http
+      .get("http://descart.grumdog.com/api/descart/shoppingcart", headers: {
+    "Authorization": "Bearer $token"
+  }).then((res) => JsonDecoder().convert(res.body));
+  return stores;
+}
+
 Future<void> deletePurchase(int purchaseId) async {
   String token = await FlutterSecureStorage().read(key: "token");
   await http.delete(

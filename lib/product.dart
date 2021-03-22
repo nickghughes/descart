@@ -7,22 +7,24 @@ import 'package:url_launcher/url_launcher.dart';
 class ProductPreview extends StatefulWidget {
   final Map<String, dynamic> product;
   final Function(bool) onUpdateFavorite;
+  final Function(bool) onUpdateList;
 
-  ProductPreview(this.product, this.onUpdateFavorite);
+  ProductPreview(this.product, this.onUpdateFavorite, this.onUpdateList);
 
   @override
   _ProductPreviewState createState() =>
-      _ProductPreviewState(product, onUpdateFavorite);
+      _ProductPreviewState(product, onUpdateFavorite, onUpdateList);
 }
 
 class _ProductPreviewState extends State<ProductPreview> {
   Future<List<dynamic>> _stores;
   Map<String, dynamic> _product;
   Function(bool) onUpdateFavorite;
+  Function(bool) onUpdateList;
 
   bool _favorite;
 
-  _ProductPreviewState(this._product, this.onUpdateFavorite)
+  _ProductPreviewState(this._product, this.onUpdateFavorite, this.onUpdateList)
       : _favorite = _product["favorite"];
 
   void _launchURL(String url) async {
@@ -46,17 +48,17 @@ class _ProductPreviewState extends State<ProductPreview> {
         builder: (context, data) {
           if (data.hasData) {
             _product["stores"] = data.data;
-            return preview(context, _product);
+            return preview(context);
           } else {
             return Center(child: CircularProgressIndicator());
           }
         });
   }
 
-  Widget preview(BuildContext context, Map<String, dynamic> product) {
+  Widget preview(BuildContext context) {
     // int numStores = product["numStores"];
     // String numStoresText = numStores == 1 ? "store" : "stores";
-    List<dynamic> stores = product["stores"];
+    List<dynamic> stores = _product["stores"];
 
     // sort by ascending price
     stores.sort(
@@ -85,9 +87,9 @@ class _ProductPreviewState extends State<ProductPreview> {
                         Expanded(
                           flex: 3,
                           child: Container(
-                            child: product["imageUrl"] == null
+                            child: _product["imageUrl"] == null
                                 ? SizedBox()
-                                : ImageWithUrl(product["imageUrl"]),
+                                : ImageWithUrl(_product["imageUrl"]),
                           ),
                         ),
                         Expanded(
@@ -104,7 +106,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                                   onTap: () async {
                                     _favorite = !_favorite;
                                     await favoriteProduct(
-                                        product["productId"], _favorite);
+                                        _product["productId"], _favorite);
                                     onUpdateFavorite(_favorite);
                                     setState(() {});
                                   },
@@ -113,10 +115,9 @@ class _ProductPreviewState extends State<ProductPreview> {
                                       : Icon(Icons.star_outline),
                                 ),
                               ),
-                              Bold.withSize(product["productName"], 20),
-                              // Bold.withSize(product["manufacturerName"], 16)
+                              Bold.withSize(_product["productName"], 20),
                               Text(
-                                product["manufacturerName"] ?? "",
+                                _product["manufacturerName"] ?? "",
                                 style: TextStyle(
                                     fontStyle: FontStyle.italic, fontSize: 16),
                               ),
@@ -145,7 +146,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                               child: ListView.separated(
                                 separatorBuilder: (context, index) =>
                                     Divider(color: Colors.black),
-                                itemCount: product["stores"].length,
+                                itemCount: _product["stores"].length,
                                 itemBuilder: (context, index) => Row(
                                   children: [
                                     Expanded(
@@ -153,33 +154,68 @@ class _ProductPreviewState extends State<ProductPreview> {
                                       child: Container(
                                         padding:
                                             EdgeInsets.fromLTRB(0, 0, 5, 0),
-                                        child: product["stores"][index]
+                                        child: _product["stores"][index]
                                                     ["imageUrl"] ==
                                                 null
                                             ? SizedBox()
-                                            : ImageWithUrl(product["stores"]
+                                            : ImageWithUrl(_product["stores"]
                                                 [index]["imageUrl"]),
                                       ),
                                     ),
                                     Expanded(
                                       flex: 4,
-                                      child: Bold.withSize(
-                                          product["stores"][index]
-                                              ["store_name"],
-                                          16),
+                                      child: InkWell(
+                                        onTap: () => _launchURL(
+                                            _product["stores"][index]["url"]),
+                                        child: Text(
+                                          _product["stores"][index]
+                                                  ["store_name"] +
+                                              (_product["stores"][index]
+                                                          ["url"] !=
+                                                      null
+                                                  ? " >"
+                                                  : ""),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: _product["stores"][index]
+                                                          ["url"] ==
+                                                      null
+                                                  ? Colors.black
+                                                  : Theme.of(context)
+                                                      .primaryColor),
+                                        ),
+                                      ),
                                     ),
                                     Expanded(
                                       flex: 2,
                                       child: Text("\$ " +
-                                          product["stores"][index]["price"]),
+                                          _product["stores"][index]["price"]),
                                     ),
                                     Expanded(
                                       flex: 2,
-                                      child: RaisedButton(
-                                        onPressed: () => _launchURL(
-                                            product["stores"][index]["url"]),
-                                        child: Text("Go"),
-                                        color: Theme.of(context).primaryColor,
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          _product["stores"][index]["in_cart"] =
+                                              !_product["stores"][index]
+                                                  ["in_cart"];
+                                          await addRemoveShoppingCart(
+                                              _product["stores"][index]
+                                                  ["sp_id"],
+                                              _product["stores"][index]
+                                                  ["in_cart"]);
+                                          onUpdateList(_product["stores"][index]
+                                              ["in_cart"]);
+                                          setState(() {});
+                                        },
+                                        child: Icon(
+                                            _product["stores"][index]["in_cart"]
+                                                ? Icons.remove_shopping_cart
+                                                : Icons.add_shopping_cart,
+                                            color: _product["stores"][index]
+                                                    ["in_cart"]
+                                                ? Theme.of(context).primaryColor
+                                                : Colors.grey),
                                       ),
                                     ),
                                   ],

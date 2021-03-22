@@ -4,6 +4,7 @@ import 'package:descart/purchase_form.dart';
 import 'package:flutter/material.dart';
 import 'package:descart/sign_in.dart';
 import 'package:descart/login_page.dart';
+import 'package:descart/shopping_list.dart';
 
 class NavScaffold extends StatefulWidget {
   @override
@@ -14,11 +15,13 @@ class _NavScaffoldState extends State<NavScaffold> {
   PageController _pageController;
   int _page = 0;
 
+  final pages = ["Discover", "Shopping List", "Purchases"];
+
   void _createPurchase() {
     showDialog(
         context: context,
         builder: (context) {
-          return PurchaseStoreForm(() => setState(() {}));
+          return PurchaseStoreForm((_) => setState(() {}));
         });
   }
 
@@ -50,38 +53,21 @@ class _NavScaffoldState extends State<NavScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         leading: new Container(),
-        title: Text(_page == 0 ? "Discover" : "Purchases"),
+        title: Text(pages[_page]),
         actions: [
           Container(
             child: InkWell(
               child: Column(
                 children: [
                   Icon(Icons.exit_to_app),
-                  InkWell(
-                    child: Text("Sign Out",
-                        style: TextStyle(
-                          color: Colors.white,
-                        )),
-                    onTap: () {
-                      signOutGoogle();
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) {
-                          return LoginPage();
-                        }),
-                        ModalRoute.withName('/'),
-                      );
-                    },
+                  Text(
+                    "Sign Out",
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -100,6 +86,7 @@ class _NavScaffoldState extends State<NavScaffold> {
       body: PageView(
         children: [
           Discover(),
+          ShoppingList(),
           PurchaseHistory(),
         ],
         controller: _pageController,
@@ -115,6 +102,10 @@ class _NavScaffoldState extends State<NavScaffold> {
           BottomNavigationBarItem(
             icon: Icon(Icons.public),
             label: 'Discover',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_bag_outlined),
+            label: 'Shopping List',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),

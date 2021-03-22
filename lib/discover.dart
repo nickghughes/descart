@@ -319,7 +319,7 @@ class _RecommendationBlockState extends State<RecommendationBlock> {
         child: ProductPreview(product, (bool _favorite) {
           this.favorite = _favorite;
           setState(() {});
-        }),
+        }, (b) {}),
       ),
     );
   }
