@@ -9,7 +9,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   String token = await storage.read(key: "token");
-  debugPrint(token);
   bool isLoggedIn = await isValidToken(token);
   if (!isLoggedIn) await storage.delete(key: "token");
   runApp(DesCart(isLoggedIn));

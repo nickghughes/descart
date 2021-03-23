@@ -210,7 +210,6 @@ class _ShoppingListBlockState extends State<ShoppingListBlock> {
               physics: NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) => InkWell(
                 onTap: () {
-                  debugPrint(store["items"][index].toString());
                   store["items"][index].containsKey("id")
                       ? openProductPreview(context, index)
                       : debugPrint("cannot open custom item");

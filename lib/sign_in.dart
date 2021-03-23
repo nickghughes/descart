@@ -39,8 +39,6 @@ Future<User> signInWithGoogle() async {
   assert(user.displayName != null);
   name = user.displayName;
   email = user.email;
-  debugPrint("Name: " + name);
-  debugPrint("email: " + email);
 
   dynamic login = await http.post(
     "http://descart.grumdog.com/api/auth/login",
@@ -54,7 +52,6 @@ Future<User> signInWithGoogle() async {
     ),
   );
   String token = JsonDecoder().convert(login.body)["access_token"];
-  debugPrint(token);
   await FlutterSecureStorage().write(key: "token", value: token);
 
   return user;
@@ -64,6 +61,4 @@ void signOutGoogle() async {
   await googleSignIn.signOut();
   await FlutterSecureStorage().delete(key: "token");
   _auth.signOut();
-
-  print("User Sign Out");
 }

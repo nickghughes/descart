@@ -121,7 +121,6 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                         flex: 1,
                         child: InkWell(
                           onTap: () async {
-                            debugPrint(_favorite.toString());
                             _favorite = !_favorite;
                             await favoritePurchase(
                                 purchase["purchaseId"], _favorite);
@@ -217,8 +216,6 @@ class _PurchasePreviewState extends State<PurchasePreview> {
                                 itemCount: purchase["items"].length,
                                 itemBuilder: (context, index) => InkWell(
                                   onTap: () {
-                                    debugPrint(
-                                        purchase["items"][index].toString());
                                     purchase["items"][index]
                                             .containsKey("productId")
                                         ? openProductPreview(context, index)
