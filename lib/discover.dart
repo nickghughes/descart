@@ -139,12 +139,14 @@ class _RecsFilterState extends State<RecsFilter> {
 
   void openCategoryPane(BuildContext context) async {
     List<String> countList = [
-      "A1",
-      "A2",
-      "A3",
-      "A4",
+      "Appliances",
+      "Computers",
+      "Electronics",
+      "Home and Kitchen",
+      "Luggage & Travel Gear",
+      "Toys & Games",
     ];
-    double containerHeight = MediaQuery.of(context).size.height * 1 / 3;
+    double containerHeight = MediaQuery.of(context).size.height * 2 / 3;
     await FilterListDialog.display(
       context,
       height: containerHeight,
