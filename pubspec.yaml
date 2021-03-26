@@ -50,6 +50,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.0
 
+  # For filtering by product category
+  filter_list: ^0.0.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
