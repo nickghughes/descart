@@ -14,14 +14,15 @@ Future<List<dynamic>> getPurchaseHistory(
   return purchases;
 }
 
-Future<List<dynamic>> getRecommendations(
-    int pageSize, int page, String search, bool favorite) async {
+Future<List<dynamic>> getRecommendations(int pageSize, int page, String search,
+    bool favorite, List<int> categoryIds) async {
   String token = await FlutterSecureStorage().read(key: "token");
+  String categoryFilters = categoryIds.map((id) => "&cat_id=$id").join("");
   return await http.get(
-      "http://descart.grumdog.com/api/descart/discover?page_size=$pageSize&page=$page&search=$search&favorite=$favorite",
-      headers: {
-        "Authorization": "Bearer $token"
-      }).then((res) => JsonDecoder().convert(res.body));
+      "http://descart.grumdog.com/api/descart/discover?page_size=$pageSize&page=$page&search=$search&favorite=$favorite$categoryFilters",
+      headers: {"Authorization": "Bearer $token"}).then((res) {
+    return JsonDecoder().convert(res.body);
+  });
 }
 
 Future<List<dynamic>> getPurchaseItems(int purchaseId) async {

@@ -156,8 +156,9 @@ class _DiscoverBodyState extends State<DiscoverBody> {
 
   Future<void> _fetchPage(int pageKey) async {
     try {
+      // TODO add current category filters here
       final newItems =
-          await getRecommendations(_pageSize, pageKey, _search, _favorite);
+          await getRecommendations(_pageSize, pageKey, _search, _favorite, []);
       final isLastPage = newItems.length < _pageSize;
       if (isLastPage) {
         _pagingController.appendLastPage(newItems);
@@ -190,6 +191,7 @@ class _DiscoverBodyState extends State<DiscoverBody> {
             rec["id"],
             rec["productName"],
             rec["manufacturerName"],
+            rec["categoryName"],
             rec["imageUrl"],
             rec["favorite"] != "0",
             int.parse(rec["numStores"]),
@@ -210,18 +212,20 @@ class RecommendationBlock extends StatefulWidget {
   final int productId;
   final String productName;
   final String manufacturerName;
+  final String categoryName;
   final String imageUrl;
   final bool favorite;
   final int numberOfStores;
 
   RecommendationBlock(this.productId, this.productName, this.manufacturerName,
-      this.imageUrl, this.favorite, this.numberOfStores);
+      this.categoryName, this.imageUrl, this.favorite, this.numberOfStores);
 
   @override
   _RecommendationBlockState createState() => _RecommendationBlockState(
       productId,
       productName,
       manufacturerName,
+      categoryName,
       imageUrl,
       favorite,
       numberOfStores);
@@ -231,13 +235,20 @@ class _RecommendationBlockState extends State<RecommendationBlock> {
   final int productId;
   final String productName;
   final String manufacturerName;
+  final String categoryName;
   final String imageUrl;
   bool favorite;
   final int numberOfStores;
   final String numberOfStoresText;
 
-  _RecommendationBlockState(this.productId, this.productName,
-      this.manufacturerName, this.imageUrl, this.favorite, this.numberOfStores)
+  _RecommendationBlockState(
+      this.productId,
+      this.productName,
+      this.manufacturerName,
+      this.categoryName,
+      this.imageUrl,
+      this.favorite,
+      this.numberOfStores)
       : this.numberOfStoresText = numberOfStores == 1 ? "store" : "stores";
 
   @override
@@ -251,6 +262,7 @@ class _RecommendationBlockState extends State<RecommendationBlock> {
             "productId": productId,
             "productName": productName,
             "manufacturerName": manufacturerName,
+            "categoryName": categoryName,
             "imageUrl": imageUrl,
             "favorite": favorite,
             "numberOfStores": numberOfStores

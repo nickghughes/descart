@@ -100,20 +100,31 @@ class _ProductPreviewState extends State<ProductPreview> {
                           flex: 6,
                           child: Column(
                             children: [
-                              Align(
-                                alignment: Alignment.topRight,
-                                child: InkWell(
-                                  onTap: () async {
-                                    _favorite = !_favorite;
-                                    await favoriteProduct(
-                                        _product["productId"], _favorite);
-                                    onUpdateFavorite(_favorite);
-                                    setState(() {});
-                                  },
-                                  child: _favorite
-                                      ? Icon(Icons.star, color: Colors.yellow)
-                                      : Icon(Icons.star_outline),
-                                ),
+                              Row(
+                                children: [
+                                  Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Text(_product["categoryName"]),
+                                  ),
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.topRight,
+                                      child: InkWell(
+                                        onTap: () async {
+                                          _favorite = !_favorite;
+                                          await favoriteProduct(
+                                              _product["productId"], _favorite);
+                                          onUpdateFavorite(_favorite);
+                                          setState(() {});
+                                        },
+                                        child: _favorite
+                                            ? Icon(Icons.star,
+                                                color: Colors.yellow)
+                                            : Icon(Icons.star_outline),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               Bold.withSize(_product["productName"], 20),
                               Text(

@@ -25,7 +25,8 @@ class _PurchaseStoreFormState extends State<PurchaseStoreForm> {
   Widget build(BuildContext context) {
     return Material(
       type: MaterialType.transparency,
-      child: Center(
+      child: Align(
+        alignment: Alignment.topCenter,
         child: Container(
           padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
           child: Container(
@@ -92,7 +93,8 @@ class _PurchaseProductFormState extends State<PurchaseProductForm> {
   Widget build(BuildContext context) {
     return Material(
       type: MaterialType.transparency,
-      child: Center(
+      child: Align(
+        alignment: Alignment.topCenter,
         child: Container(
           padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
           child: Container(
