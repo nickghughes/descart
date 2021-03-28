@@ -4,6 +4,7 @@ import 'package:descart/product.dart';
 import 'package:descart/util.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:filter_list/filter_list.dart';
 
 class Discover extends StatefulWidget {
   Discover();
@@ -15,12 +16,14 @@ class Discover extends StatefulWidget {
 class _DiscoverState extends State<Discover> {
   String _search = "";
   bool _favorite = false;
+  List<String> _categories;
 
   _DiscoverState();
 
-  void updateFilter(String search, bool favorite) {
+  void updateFilter(String search, bool favorite, List<String> categories) {
     _search = search;
     _favorite = favorite;
+    _categories = categories;
     setState(() {});
   }
 
@@ -33,7 +36,7 @@ class _DiscoverState extends State<Discover> {
           children: [
             RecsFilter(updateFilter),
             Expanded(
-              child: DiscoverBody(_search, _favorite),
+              child: DiscoverBody(_search, _favorite, _categories),
             ),
           ],
         ),
@@ -43,7 +46,7 @@ class _DiscoverState extends State<Discover> {
 }
 
 class RecsFilter extends StatefulWidget {
-  final Function(String, bool) onUpdate;
+  final Function(String, bool, List<String>) onUpdate;
   RecsFilter(this.onUpdate);
 
   @override
@@ -53,8 +56,10 @@ class RecsFilter extends StatefulWidget {
 class _RecsFilterState extends State<RecsFilter> {
   bool _favorite = false;
   final searchController = TextEditingController();
+  bool _useCategory = false;
+  List<String> _categories;
 
-  Function(String, bool) onUpdate;
+  Function(String, bool, List<String>) onUpdate;
   _RecsFilterState(this.onUpdate);
 
   @override
@@ -75,7 +80,8 @@ class _RecsFilterState extends State<RecsFilter> {
                   Expanded(
                     child: TextField(
                       controller: searchController,
-                      onChanged: (String query) => onUpdate(query, _favorite),
+                      onChanged: (String query) =>
+                          onUpdate(query, _favorite, ["TODO_CATEGORY"]),
                       maxLength: 35,
                       maxLines: 1,
                       decoration: InputDecoration(
@@ -93,9 +99,33 @@ class _RecsFilterState extends State<RecsFilter> {
           ),
           SizedBox(width: 5),
           InkWell(
+              onTap: () {
+                debugPrint("tapped filter config pane");
+                openCategoryPane(context);
+                if (_categories.isNotEmpty) {
+                  _useCategory = true;
+                }
+                onUpdate(searchController.text, _favorite, ["TODO_CATEGORY"]);
+                setState(() {});
+              },
+              child: Icon(Icons.filter_list_outlined)),
+          SizedBox(width: 5),
+          InkWell(
+            onTap: () {
+              debugPrint("tapped filter");
+              _useCategory = !_useCategory;
+              onUpdate(searchController.text, _favorite, ["TODO_CATEGORY"]);
+              setState(() {});
+            },
+            child: _useCategory
+                ? Icon(Icons.filter_alt, color: Colors.orange)
+                : Icon(Icons.filter_alt_outlined),
+          ),
+          SizedBox(width: 5),
+          InkWell(
             onTap: () {
               _favorite = !_favorite;
-              onUpdate(searchController.text, _favorite);
+              onUpdate(searchController.text, _favorite, ["TODO_CATEGORY"]);
               setState(() {});
             },
             child: _favorite
@@ -106,23 +136,76 @@ class _RecsFilterState extends State<RecsFilter> {
       ),
     );
   }
+
+  void openCategoryPane(BuildContext context) async {
+    List<String> countList = [
+      "Appliances",
+      "Computers",
+      "Electronics",
+      "Home and Kitchen",
+      "Luggage & Travel Gear",
+      "Toys & Games",
+    ];
+    double containerHeight = MediaQuery.of(context).size.height * 2 / 3;
+    await FilterListDialog.display(
+      context,
+      height: containerHeight,
+      listData: countList,
+      selectedListData: _categories,
+      hideheaderText: true,
+      hidecloseIcon: true,
+      onApplyButtonClick: (list) {
+        if (list != null) {
+          print("Selected items count: ${list.length}");
+          setState(() {
+            _categories = List.from(list);
+            Navigator.pop(context);
+          });
+        }
+      },
+      label: (item) {
+        /// Used to print text on chip
+        return item.toString();
+      },
+      validateSelectedItem: (list, val) {
+        ///  identify if item is selected or not
+        return list.contains(val);
+      },
+      onItemSearch: (list, text) {
+        /// When text change in search text field then return list containing that text value
+        ///
+        ///Check if list has value which matchs to text
+        if (list.any((element) =>
+            element.toString().toLowerCase().contains(text.toLowerCase()))) {
+          /// return list which contains matches
+          return list
+              .where((element) =>
+                  element.toString().toLowerCase().contains(text.toLowerCase()))
+              .toList();
+        }
+      },
+    );
+  }
 }
 
 class DiscoverBody extends StatefulWidget {
   final String _search;
   final bool _favorite;
-  DiscoverBody(this._search, this._favorite);
+  final List<String> _categories;
+  DiscoverBody(this._search, this._favorite, this._categories);
 
   @override
-  _DiscoverBodyState createState() => _DiscoverBodyState(_search, _favorite);
+  _DiscoverBodyState createState() =>
+      _DiscoverBodyState(_search, _favorite, _categories);
 }
 
 class _DiscoverBodyState extends State<DiscoverBody> {
   final int _pageSize = 24;
   String _search;
   bool _favorite;
+  List<String> _categories;
 
-  _DiscoverBodyState(this._search, this._favorite);
+  _DiscoverBodyState(this._search, this._favorite, this._categories);
 
   final PagingController<int, dynamic> _pagingController =
       PagingController(firstPageKey: 0);
@@ -334,5 +417,16 @@ class _RecommendationBlockState extends State<RecommendationBlock> {
         }, (b) {}),
       ),
     );
+  }
+}
+
+class Item {
+  String _name;
+  Item(String name) {
+    this._name = name;
+  }
+  @override
+  String toString() {
+    return this._name;
   }
 }
