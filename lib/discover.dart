@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:descart/network.dart';
 import 'package:descart/product.dart';
@@ -16,14 +17,14 @@ class Discover extends StatefulWidget {
 class _DiscoverState extends State<Discover> {
   String _search = "";
   bool _favorite = false;
-  List<String> _categories;
+  List<int> _categoryIndices = [];
 
   _DiscoverState();
 
-  void updateFilter(String search, bool favorite, List<String> categories) {
+  void updateFilter(String search, bool favorite, List<int> categoryIndices) {
     _search = search;
     _favorite = favorite;
-    _categories = categories;
+    _categoryIndices = categoryIndices;
     setState(() {});
   }
 
@@ -36,7 +37,7 @@ class _DiscoverState extends State<Discover> {
           children: [
             RecsFilter(updateFilter),
             Expanded(
-              child: DiscoverBody(_search, _favorite, _categories),
+              child: DiscoverBody(_search, _favorite, _categoryIndices),
             ),
           ],
         ),
@@ -46,7 +47,7 @@ class _DiscoverState extends State<Discover> {
 }
 
 class RecsFilter extends StatefulWidget {
-  final Function(String, bool, List<String>) onUpdate;
+  final Function(String, bool, List<int>) onUpdate;
   RecsFilter(this.onUpdate);
 
   @override
@@ -57,9 +58,10 @@ class _RecsFilterState extends State<RecsFilter> {
   bool _favorite = false;
   final searchController = TextEditingController();
   bool _useCategory = false;
-  List<String> _categories;
+  List<String> _categories = [];
+  List<int> _categoryIndices = [];
 
-  Function(String, bool, List<String>) onUpdate;
+  Function(String, bool, List<int>) onUpdate;
   _RecsFilterState(this.onUpdate);
 
   @override
@@ -81,7 +83,7 @@ class _RecsFilterState extends State<RecsFilter> {
                     child: TextField(
                       controller: searchController,
                       onChanged: (String query) =>
-                          onUpdate(query, _favorite, ["TODO_CATEGORY"]),
+                          onUpdate(query, _favorite, _categoryIndices),
                       maxLength: 35,
                       maxLines: 1,
                       decoration: InputDecoration(
@@ -99,22 +101,9 @@ class _RecsFilterState extends State<RecsFilter> {
           ),
           SizedBox(width: 5),
           InkWell(
-              onTap: () {
-                debugPrint("tapped filter config pane");
-                openCategoryPane(context);
-                if (_categories.isNotEmpty) {
-                  _useCategory = true;
-                }
-                onUpdate(searchController.text, _favorite, ["TODO_CATEGORY"]);
-                setState(() {});
-              },
-              child: Icon(Icons.filter_list_outlined)),
-          SizedBox(width: 5),
-          InkWell(
             onTap: () {
-              debugPrint("tapped filter");
-              _useCategory = !_useCategory;
-              onUpdate(searchController.text, _favorite, ["TODO_CATEGORY"]);
+              openCategoryPane(context);
+              onUpdate(searchController.text, _favorite, _categoryIndices);
               setState(() {});
             },
             child: _useCategory
@@ -125,7 +114,7 @@ class _RecsFilterState extends State<RecsFilter> {
           InkWell(
             onTap: () {
               _favorite = !_favorite;
-              onUpdate(searchController.text, _favorite, ["TODO_CATEGORY"]);
+              onUpdate(searchController.text, _favorite, _categoryIndices);
               setState(() {});
             },
             child: _favorite
@@ -138,19 +127,20 @@ class _RecsFilterState extends State<RecsFilter> {
   }
 
   void openCategoryPane(BuildContext context) async {
-    List<String> countList = [
-      "Appliances",
-      "Computers",
-      "Electronics",
-      "Home and Kitchen",
-      "Luggage & Travel Gear",
-      "Toys & Games",
-    ];
+    // I know this is messy and brute force, but it works for now -VV
+    final List<dynamic> categoryList = await getCategories();
+    List<String> catList =
+        categoryList.map((e) => e.values.toList()[1].toString()).toList();
+    List<String> indListStr =
+        categoryList.map((e) => e.values.toList()[0].toString()).toList();
+
+    List<int> indList = indListStr.map(int.parse).toList();
+
     double containerHeight = MediaQuery.of(context).size.height * 2 / 3;
     await FilterListDialog.display(
       context,
       height: containerHeight,
-      listData: countList,
+      listData: catList,
       selectedListData: _categories,
       hideheaderText: true,
       hidecloseIcon: true,
@@ -159,6 +149,15 @@ class _RecsFilterState extends State<RecsFilter> {
           print("Selected items count: ${list.length}");
           setState(() {
             _categories = List.from(list);
+            _categoryIndices = [];
+            for (String cat in _categories) {
+              for (int i = 0; i < catList.length; i++) {
+                if (catList[i] == cat) {
+                  _categoryIndices.add(indList[i]);
+                }
+              }
+            }
+            list.length > 0 ? _useCategory = true : _useCategory = false;
             Navigator.pop(context);
           });
         }
@@ -191,21 +190,21 @@ class _RecsFilterState extends State<RecsFilter> {
 class DiscoverBody extends StatefulWidget {
   final String _search;
   final bool _favorite;
-  final List<String> _categories;
-  DiscoverBody(this._search, this._favorite, this._categories);
+  final List<int> _categoryIndices;
+  DiscoverBody(this._search, this._favorite, this._categoryIndices);
 
   @override
   _DiscoverBodyState createState() =>
-      _DiscoverBodyState(_search, _favorite, _categories);
+      _DiscoverBodyState(_search, _favorite, _categoryIndices);
 }
 
 class _DiscoverBodyState extends State<DiscoverBody> {
   final int _pageSize = 24;
   String _search;
   bool _favorite;
-  List<String> _categories;
+  List<int> _categoryIndices = [];
 
-  _DiscoverBodyState(this._search, this._favorite, this._categories);
+  _DiscoverBodyState(this._search, this._favorite, this._categoryIndices);
 
   final PagingController<int, dynamic> _pagingController =
       PagingController(firstPageKey: 0);
@@ -227,10 +226,12 @@ class _DiscoverBodyState extends State<DiscoverBody> {
   @override
   void didUpdateWidget(DiscoverBody oldWidget) {
     if (oldWidget._search != widget._search ||
-        oldWidget._favorite != widget._favorite) {
+        oldWidget._favorite != widget._favorite ||
+        oldWidget._categoryIndices != widget._categoryIndices) {
       setState(() {
         _search = widget._search;
         _favorite = widget._favorite;
+        _categoryIndices = widget._categoryIndices;
       });
       _pagingController.refresh();
     }
@@ -240,8 +241,8 @@ class _DiscoverBodyState extends State<DiscoverBody> {
   Future<void> _fetchPage(int pageKey) async {
     try {
       // TODO add current category filters here
-      final newItems =
-          await getRecommendations(_pageSize, pageKey, _search, _favorite, []);
+      final newItems = await getRecommendations(
+          _pageSize, pageKey, _search, _favorite, _categoryIndices);
       final isLastPage = newItems.length < _pageSize;
       if (isLastPage) {
         _pagingController.appendLastPage(newItems);
