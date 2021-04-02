@@ -103,8 +103,6 @@ class _RecsFilterState extends State<RecsFilter> {
           InkWell(
             onTap: () {
               openCategoryPane(context);
-              onUpdate(searchController.text, _favorite, _categoryIndices);
-              setState(() {});
             },
             child: _useCategory
                 ? Icon(Icons.filter_alt, color: Colors.orange)
@@ -137,7 +135,7 @@ class _RecsFilterState extends State<RecsFilter> {
     List<int> indList = indListStr.map(int.parse).toList();
 
     double containerHeight = MediaQuery.of(context).size.height * 2 / 3;
-    await FilterListDialog.display(
+    FilterListDialog.display(
       context,
       height: containerHeight,
       listData: catList,
@@ -147,19 +145,19 @@ class _RecsFilterState extends State<RecsFilter> {
       onApplyButtonClick: (list) {
         if (list != null) {
           print("Selected items count: ${list.length}");
-          setState(() {
-            _categories = List.from(list);
-            _categoryIndices = [];
-            for (String cat in _categories) {
-              for (int i = 0; i < catList.length; i++) {
-                if (catList[i] == cat) {
-                  _categoryIndices.add(indList[i]);
-                }
+          _categories = List.from(list);
+          _categoryIndices = [];
+          for (String cat in _categories) {
+            for (int i = 0; i < catList.length; i++) {
+              if (catList[i] == cat) {
+                _categoryIndices.add(indList[i]);
               }
             }
-            list.length > 0 ? _useCategory = true : _useCategory = false;
-            Navigator.pop(context);
-          });
+          }
+          _useCategory = list.length > 0;
+          Navigator.pop(context);
+          onUpdate(searchController.text, _favorite, _categoryIndices);
+          setState(() {});
         }
       },
       label: (item) {
@@ -170,19 +168,8 @@ class _RecsFilterState extends State<RecsFilter> {
         ///  identify if item is selected or not
         return list.contains(val);
       },
-      onItemSearch: (list, text) {
-        /// When text change in search text field then return list containing that text value
-        ///
-        ///Check if list has value which matchs to text
-        if (list.any((element) =>
-            element.toString().toLowerCase().contains(text.toLowerCase()))) {
-          /// return list which contains matches
-          return list
-              .where((element) =>
-                  element.toString().toLowerCase().contains(text.toLowerCase()))
-              .toList();
-        }
-      },
+      onItemSearch: (list, str) => list,
+      hideSearchField: true,
     );
   }
 }
@@ -202,7 +189,7 @@ class _DiscoverBodyState extends State<DiscoverBody> {
   final int _pageSize = 24;
   String _search;
   bool _favorite;
-  List<int> _categoryIndices = [];
+  List<int> _categoryIndices;
 
   _DiscoverBodyState(this._search, this._favorite, this._categoryIndices);
 
@@ -227,7 +214,7 @@ class _DiscoverBodyState extends State<DiscoverBody> {
   void didUpdateWidget(DiscoverBody oldWidget) {
     if (oldWidget._search != widget._search ||
         oldWidget._favorite != widget._favorite ||
-        oldWidget._categoryIndices != widget._categoryIndices) {
+        !listEquals(oldWidget._categoryIndices, widget._categoryIndices)) {
       setState(() {
         _search = widget._search;
         _favorite = widget._favorite;
@@ -240,7 +227,6 @@ class _DiscoverBodyState extends State<DiscoverBody> {
 
   Future<void> _fetchPage(int pageKey) async {
     try {
-      // TODO add current category filters here
       final newItems = await getRecommendations(
           _pageSize, pageKey, _search, _favorite, _categoryIndices);
       final isLastPage = newItems.length < _pageSize;
