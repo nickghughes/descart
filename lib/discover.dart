@@ -248,8 +248,6 @@ class _DiscoverBodyState extends State<DiscoverBody> {
         () => _pagingController.refresh(),
       ),
       child: PagedGridView(
-        key: Key(
-            "${_pagingController.itemList?.length ?? 0}${_pagingController.nextPageKey}$_search$_favorite"),
         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 150,
           mainAxisSpacing: 2,

@@ -218,8 +218,6 @@ class _PurchaseHistoryBodyState extends State<PurchaseHistoryBody> {
         () => _pagingController.refresh(),
       ),
       child: PagedListView.separated(
-        key: Key(
-            "${_pagingController.itemList?.length ?? 0}${_pagingController.nextPageKey}$_search$_favorite$_sortIdx"),
         pagingController: _pagingController,
         separatorBuilder: (context, index) => SizedBox(height: 2),
         builderDelegate: PagedChildBuilderDelegate(

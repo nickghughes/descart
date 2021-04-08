@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Bold extends StatelessWidget {
   final String text;
@@ -24,9 +25,10 @@ class ImageWithUrl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      url,
-      errorBuilder: (context, exception, stackTrace) => Icon(Icons.error),
+    return CachedNetworkImage(
+      imageUrl: url,
+      placeholder: (context, url) => CircularProgressIndicator(),
+      errorWidget: (context, url, error) => Icon(Icons.error),
     );
   }
 }

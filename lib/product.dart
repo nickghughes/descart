@@ -65,7 +65,7 @@ class _ProductPreviewState extends State<ProductPreview> {
         (x, y) => double.parse(x["price"]).compareTo(double.parse(y["price"])));
 
     double containerHeight = MediaQuery.of(context).size.height * 2 / 3;
-
+    debugPrint(stores.toString());
     return Material(
       type: MaterialType.transparency,
       child: SafeArea(
@@ -104,7 +104,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                                 children: [
                                   Align(
                                     alignment: Alignment.topLeft,
-                                    child: Text(_product["categoryName"]),
+                                    child: Text(_product["categoryName"] ?? ""),
                                   ),
                                   Expanded(
                                     child: Align(
