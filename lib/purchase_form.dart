@@ -162,7 +162,7 @@ class _PurchaseFormState extends State<PurchaseForm> {
   final bool fromShoppingList;
   List<dynamic> items;
   _PurchaseFormState(this.store, this.onSave, this.fromShoppingList)
-      : items = store["items"] as List<dynamic> ?? [];
+      : items = List<dynamic>.from(store["items"] ?? []);
   final _scrollController = ScrollController();
 
   @override
@@ -487,12 +487,20 @@ class _ItemFormState extends State<ItemForm> {
   _ItemFormState(
       this.item, this.onQuantityUpdate, this.onPriceUpdate, this.onDelete);
 
-  final priceController = MoneyMaskedTextController(
-      decimalSeparator: '.',
-      thousandSeparator: '',
-      leftSymbol: '\$',
-      precision: 2);
-  final quantityController = TextEditingController();
+  var priceController;
+  var quantityController;
+
+  @override
+  void initState() {
+    priceController = MoneyMaskedTextController(
+        initialValue: item["price"] == null ? 0.0 : double.parse(item["price"]),
+        decimalSeparator: '.',
+        thousandSeparator: '',
+        leftSymbol: '\$',
+        precision: 2);
+    quantityController = TextEditingController(text: item["quantity"]);
+    super.initState();
+  }
 
   @override
   void dispose() {
